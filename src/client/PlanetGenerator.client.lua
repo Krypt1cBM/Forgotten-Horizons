@@ -70,17 +70,16 @@ local Faces = {
 }
 
 	--Resolution
-local BoundSamplesPerFace = 8
 local FaceResolution = 32
 
 local refRadius = 900
 local refResolution = 32
 local function UpdateResolution()
-	local FaceResolution = math.floor(
+	local resolution = math.floor(
 		refResolution * PlanetData.Radius / refRadius
 	)
 	
-	FaceResolution = math.min(FaceResolution, 64)
+	FaceResolution = math.min(resolution, 64)
 end
 UpdateResolution()
 
@@ -251,7 +250,6 @@ for _, Face in ipairs(Faces) do
 	local Mesh = AssetService:CreateEditableMesh()
 
 	local Vertices = {}
-	local HeightMap = {}
 	
 	--VERTEX LOOPS--
 	for y = 0, FaceResolution do
