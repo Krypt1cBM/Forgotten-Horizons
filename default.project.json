@@ -11,6 +11,7 @@
     },
 
     "ServerScriptService": {
+      "$className": "ServerScriptService",
       "$path": "src/server"
     },
 
