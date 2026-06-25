@@ -28,6 +28,8 @@ local PlanetData = {
 PlanetData.Radius = 2000
 PlanetData.BaseScale = 2
 PlanetData.MountainMaskScale = 0.8
+PlanetData.ContinentScale = 1.5
+PlanetData.ContinentDetailScale = 4
 
 --Faces
 local Faces = {
@@ -84,7 +86,7 @@ UpdateResolution()
 --Colors
 local OceanColorId = Color3.fromRGB(30, 100, 220)
 local LandColorId = Color3.fromRGB(120, 200, 80)
-local CONTINENT_THRESHOLD = 0.5
+local CONTINENT_THRESHOLD = 0.53
 
 --SEED--
 local SeedX = Seed * 1.731
@@ -112,21 +114,15 @@ local function DetailHeight(Normal)
 end
 
 local function ContinentMask(Normal)
-	local continentScale = PlanetData.BaseScale * 0.2
+	local a = (math.noise(Normal.X * 1.2 + SeedX, Normal.Y * 1.2 + SeedY, Normal.Z * 1.2 + SeedZ) + 1) * 0.5
+	local b = (math.noise(Normal.X * 2 + SeedX, Normal.Y * 2 + SeedY, Normal.Z * 2 + SeedZ) + 1) * 0.5
+	local c = (math.noise(Normal.X * 3.5 + SeedX, Normal.Y * 3.5 + SeedY, Normal.Z * 3.5 + SeedZ) + 1) * 0.5
 
-	local large = (
-		math.noise(
-			Normal.X * continentScale + SeedX,
-			Normal.Y * continentScale + SeedY,
-			Normal.Z * continentScale + SeedZ
-		) + 1
-	) * 0.5
-
-	local small = (math.noise(Normal.X * 1.3 + SeedX, Normal.Y * 1.3 + SeedY, Normal.Z * 1.3 + SeedZ) + 1) * 0.5
-
-	local c = large * 0.7 + small * 0.3
-
-	return c
+	return a * 0.7 + b * 0.3 + c * 0.1
+	--[[local d = a * 0.7 + b * 0.3 + c * 0.1
+	d = (d - 0.5) * 1.5 + 0.5   good archipelago world
+	return math.clamp(c, 0, 1)]]
+	--
 end
 
 local function GetTerrainData(Normal)
@@ -183,6 +179,8 @@ local function GetTriangleColor(Normal)
 	else
 		return OceanColorId
 	end
+	--local c = terrain.Continent
+	--return Color3.new(c, c, c)
 end
 
 --Others
