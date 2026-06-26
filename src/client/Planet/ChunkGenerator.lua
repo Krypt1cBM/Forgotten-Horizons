@@ -5,7 +5,7 @@ local ChunkGenerator = {}
 function ChunkGenerator.Generate(EditableMesh, FaceName, ChunkX, ChunkY)
 	local Vertices = {}
 
-	local uMin, uMax, vMin, vMax = CubeSphere.GetChunkBounds(ChunkX, ChunkY, Constants.ChunksPerFace)
+	local uMin, uMax, vMin, vMax = CubeSphere.GetChunkBounds(ChunkX, ChunkY)
 
 	for y = 0, Constants.RESOLUTION do
 		Vertices[y] = {}

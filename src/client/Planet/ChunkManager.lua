@@ -1,29 +1,24 @@
-local AssetService = game:GetService("AssetService")
-
 local Chunk = require(script.Parent.Chunk)
+local StreamPlanner = require(script.Parent.StreamPlanner)
 
 local ChunkManager = {}
 local LoadedChunks = {}
 
 function ChunkManager.Initialize()
-	local Face = "+Y"
-	local CenterChunkX = 5
-	local CenterChunkY = 5
+	local Plan = StreamPlanner.GetPlan("+Y", 5, 5, StreamPlanner.HiddenCorner.SE)
 
-	for OffsetY = -1, 1 do
-		for OffsetX = -1, 1 do
-			print("Making Chunk", OffsetX, OffsetY)
-			local ChunkObject = Chunk.new()
+	for _, Data in ipairs(Plan) do
+		local ChunkObject = Chunk.new()
 
-			ChunkObject:Generate(Face, CenterChunkX + OffsetX, CenterChunkY + OffsetY)
+		ChunkObject:Generate(Data.Face, Data.ChunkX, Data.ChunkY)
 
-			table.insert(LoadedChunks, ChunkObject)
-		end
+		table.insert(LoadedChunks, ChunkObject)
 	end
 end
 
 function ChunkManager.Update()
-	--TODO player tracker
+	--local Plan = StreamPlanner.GetPlan()
+	--TODO compare loaded chunks
 end
 
 return ChunkManager

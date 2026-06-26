@@ -12,10 +12,26 @@ function Chunk.new()
 	self.ChunkX = nil
 	self.ChunkY = nil
 
-	self.EditableMesh = AssetService:CreateEditableMesh()
 	self.MeshPart = nil
 
 	return self
+end
+
+function Chunk:BuildMesh()
+	local EditableMesh = AssetService:CreateEditableMesh()
+
+	ChunkGenerator.Generate(EditableMesh, self.Face, self.ChunkX, self.ChunkY)
+
+	local MeshPart = AssetService:CreateMeshPartAsync(Content.fromObject(EditableMesh), {
+		CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
+	})
+
+	--EditableMesh:Destroy()
+
+	MeshPart.Anchored = true
+	MeshPart.Parent = workspace
+
+	return MeshPart
 end
 
 function Chunk:Generate(Face, ChunkX, ChunkY)
@@ -23,20 +39,11 @@ function Chunk:Generate(Face, ChunkX, ChunkY)
 	self.ChunkX = ChunkX
 	self.ChunkY = ChunkY
 
-	ChunkGenerator.Generate(self.EditableMesh, Face, ChunkX, ChunkY)
-
 	if self.MeshPart then
 		self.MeshPart:Destroy()
 	end
 
-	local MeshPart = AssetService:CreateMeshPartAsync(Content.fromObject(self.EditableMesh), {
-		CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
-	})
-
-	MeshPart.Anchored = true
-	MeshPart.Parent = workspace
-
-	self.MeshPart = MeshPart
+	self.MeshPart = self:BuildMesh()
 end
 
 function Chunk:Recycle(Face, ChunkX, ChunkY)

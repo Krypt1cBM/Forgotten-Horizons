@@ -18,8 +18,8 @@ function CubeSphere.CubeToSphere(v)
 	)
 end
 
-function CubeSphere.GetChunkBounds(ChunkX, ChunkY, ChunksPerFace)
-	local ChunkSize = 2 / ChunksPerFace
+function CubeSphere.GetChunkBounds(ChunkX, ChunkY)
+	local ChunkSize = 2 / Constants.ChunksPerFace
 
 	local uMin = -1 + ChunkX * ChunkSize
 	local uMax = uMin + ChunkSize
