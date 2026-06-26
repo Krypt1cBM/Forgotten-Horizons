@@ -16,7 +16,7 @@ starterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 
 local Inventory = require(script.Parent:WaitForChild("Inventory"))
 local DragController = require(script.Parent:WaitForChild("DragController"))
-local Items = require(game.ReplicatedStorage:WaitForChild("ItemDatabase"))
+local Items = require(game.ReplicatedStorage.Scripts:WaitForChild("ItemDatabase"))
 
 local HOTBAR_SIZE = 9
 local SlotRegistry = {}
@@ -29,27 +29,26 @@ local selectedSlot = nil
 local slotImages = {
 	Default = "rbxassetid://89175117594739",
 	Hover = "rbxassetid://72163720101959",
-	Selected = "rbxassetid://92345702814524"
+	Selected = "rbxassetid://92345702814524",
 }
 
 DragController:Init(Inventory, SlotRegistry)
 
 local function getIcon(itemId)
-	local itemDatabase = require(game.ReplicatedStorage:WaitForChild("ItemDatabase"))
-	return itemDatabase[itemId].Icon
+	return Items[itemId].Icon
 end
 
 local function getSlotUI(index)
 	if index <= HOTBAR_SIZE then
 		return hotbar.Frame:FindFirstChild("Slot" .. index)
 	end
-	
+
 	local startIndex = ContainerStart or 10
 	local endIndex = ContainerEnd or 30
-	
+
 	for i = startIndex, endIndex do
 		local slotUI = inventoryGui.positioning.MainBackground.Slots:FindFirstChild("Slot" .. i)
-		
+
 		if slotUI and slotUI:GetAttribute("SlotIndex") == index then
 			return slotUI
 		end
@@ -57,9 +56,13 @@ local function getSlotUI(index)
 end
 
 local function updateSlotImage(slotUI, isHovering)
-	if not slotUI then return end
+	if not slotUI then
+		return
+	end
 	for i = 1, 9 do
-		if slotUI:GetAttribute("SlotIndex") == i then return end
+		if slotUI:GetAttribute("SlotIndex") == i then
+			return
+		end
 	end
 	local selected = slotUI:GetAttribute("Selected")
 	local scale = slotUI:FindFirstChild("UIScale")
@@ -90,24 +93,34 @@ local function clearItemInfo()
 end
 local function renderItemInfo(slotUI)
 	for i = 1, 9 do
-		if slotUI:GetAttribute("SlotIndex") == i then return end
+		if slotUI:GetAttribute("SlotIndex") == i then
+			return
+		end
 	end
-	
+
 	local index = slotUI:GetAttribute("SlotIndex")
-	if not index then return end
-	
-	if Inventory.Slots[index] == nil then return end
-	
+	if not index then
+		return
+	end
+
+	if Inventory.Slots[index] == nil then
+		return
+	end
+
 	local id = Inventory.Slots[index].ItemId
-	if not id then return end
-	
+	if not id then
+		return
+	end
+
 	local slotData = Items[id]
-	if not slotData then return end
-	
+	if not slotData then
+		return
+	end
+
 	clearItemInfo()
-	
+
 	itemInfo.ItemImage.Image = getIcon(slotData.ItemId)
-	
+
 	if slotData.Damage and slotData.Durability then
 		local frame = itemInfo["1"]
 		frame.Visible = true
@@ -190,8 +203,10 @@ local function isShiftHeld()
 	return uis:IsKeyDown(Enum.KeyCode.LeftShift) or uis:IsKeyDown(Enum.KeyCode.RightShift)
 end
 local function quickMove(slotIndex, indexStart, indexEnd)
-	if not slotIndex then return end
-	
+	if not slotIndex then
+		return
+	end
+
 	local destination
 	if slotIndex > 9 then
 		destination = "inventory"
@@ -200,8 +215,10 @@ local function quickMove(slotIndex, indexStart, indexEnd)
 	end
 
 	local fromSlot = Inventory:GetSlot(slotIndex)
-	if not fromSlot then return end
-	
+	if not fromSlot then
+		return
+	end
+
 	local start
 	local final
 	if indexStart then
@@ -217,8 +234,10 @@ local function quickMove(slotIndex, indexStart, indexEnd)
 	end
 	print("moving ", fromSlot.ItemId, "from ", start, " to ", final)
 	local toSlotIndex = Inventory:NextTransferableIndex(fromSlot.ItemId, start, final)
-	if not toSlotIndex then return end
-	
+	if not toSlotIndex then
+		return
+	end
+
 	Inventory:MoveSlot(slotIndex, toSlotIndex)
 	if selectedSlot == fromSlot then
 		selectedSlot = nil
@@ -248,7 +267,9 @@ local function render()
 			else
 				icon.Image = ""
 				icon.Visible = false
-				if amount then amount.Visible = false end
+				if amount then
+					amount.Visible = false
+				end
 			end
 		end
 	end
@@ -268,23 +289,25 @@ local function connectSlot(slotUI, index)
 	slotUI:SetAttribute("Selected", false)
 
 	slotUI.InputBegan:Connect(function(input)
-		if input.UserInputType ~= Enum.UserInputType.MouseButton1
-			and input.UserInputType ~= Enum.UserInputType.MouseButton2 then
+		if
+			input.UserInputType ~= Enum.UserInputType.MouseButton1
+			and input.UserInputType ~= Enum.UserInputType.MouseButton2
+		then
 			return
 		end
-		
+
 		if isShiftHeld() then
 			quickMove(slotUI:GetAttribute("SlotIndex"), ContainerStart, ContainerEnd)
 			return
 		end
-		
+
 		if input.UserInputType ~= Enum.UserInputType.MouseButton2 then
 			selectSlot(slotUI)
 		end
-		
+
 		DragController:StartDrag(slotUI, uis:GetMouseLocation(), input.UserInputType)
 	end)
-	
+
 	slotUI.MouseEnter:Connect(function()
 		updateSlotImage(slotUI, true)
 	end)
@@ -315,7 +338,14 @@ for i = SLOT_INDEX, Inventory.TotalSlots do
 end
 
 for _, chest in ipairs(workspace.Chests:GetChildren()) do
-	for i, slot in ipairs(chest.GUI:WaitForChild("Inventory").SurfaceGui.positioning.MainBackground:WaitForChild("Slots"):GetChildren()) do
+	for i, slot in
+		ipairs(
+			chest.GUI
+				:WaitForChild("Inventory").SurfaceGui.positioning.MainBackground
+				:WaitForChild("Slots")
+				:GetChildren()
+		)
+	do
 		if slot:IsA("ImageButton") then
 			connectSlot(slot, SLOT_INDEX)
 		end
@@ -325,13 +355,19 @@ for _, chest in ipairs(workspace.Chests:GetChildren()) do
 end
 
 uis.InputChanged:Connect(function(input)
-	if input.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+	if input.UserInputType ~= Enum.UserInputType.MouseMovement then
+		return
+	end
 	DragController:UpdateDrag(uis:GetMouseLocation())
 end)
 
 uis.InputEnded:Connect(function(input)
-	if input.UserInputType ~= Enum.UserInputType.MouseButton1
-		and input.UserInputType ~= Enum.UserInputType.MouseButton2 then return end
+	if
+		input.UserInputType ~= Enum.UserInputType.MouseButton1
+		and input.UserInputType ~= Enum.UserInputType.MouseButton2
+	then
+		return
+	end
 
 	local cancelled = DragController:EndDrag(uis:GetMouseLocation()).cancelled
 	if selectedSlot and not cancelled then
@@ -343,6 +379,9 @@ uis.InputEnded:Connect(function(input)
 end)
 
 uis.InputBegan:Connect(function(input, gp)
+	if not gp then
+		return
+	end
 	if input.KeyCode == Enum.KeyCode.E and not activeContainer then
 		inventoryGui.Enabled = not inventoryGui.Enabled
 	end
@@ -364,23 +403,23 @@ local CloseContainer = events.CloseContainer
 OpenContainer.OnClientEvent:Connect(function(container)
 	ContainerStart = container.GUI.Inventory.SurfaceGui.positioning.MainBackground.Slots.Slot1:GetAttribute("SlotIndex")
 	ContainerEnd = container.GUI.Inventory.SurfaceGui.positioning.MainBackground.Slots.Slot21:GetAttribute("SlotIndex")
-	
+
 	playerInventory.Enabled = false
 	DragController:SetContainerOpen(true)
 	activeContainer = container
-	
+
 	setCharacterVisible(false)
 	humanoid.WalkSpeed = 0
 	humanoid.JumpPower = 0
-	
+
 	local cam = workspace.CurrentCamera
 	cam.CameraType = Enum.CameraType.Scriptable
 	cam.CFrame = container.Camera.Value
-	
+
 	local chestGui = container.GUI.Chest.SurfaceGui
 	inventoryGui = container.GUI.Inventory.SurfaceGui
 	itemInfo = container.GUI.ItemInfo.SurfaceGui.ItemInfo
-	
+
 	chestGui.Enabled = true
 	inventoryGui.Enabled = true
 	itemInfo.Parent.Enabled = true
@@ -390,17 +429,17 @@ end)
 CloseContainer.OnClientEvent:Connect(function(container)
 	ContainerStart = nil
 	ContainerEnd = nil
-	
+
 	DragController:SetContainerOpen(false)
 	activeContainer = nil
-	
+
 	setCharacterVisible(true)
 	humanoid.WalkSpeed = 16
 	humanoid.JumpPower = 50
-	
+
 	local cam = workspace.CurrentCamera
 	cam.CameraType = Enum.CameraType.Custom
-	
+
 	local chestGui = container.GUI.Chest.SurfaceGui
 	inventoryGui = container.GUI.Inventory.SurfaceGui
 	itemInfo = container.GUI.ItemInfo.SurfaceGui.ItemInfo
@@ -408,7 +447,7 @@ CloseContainer.OnClientEvent:Connect(function(container)
 	chestGui.Enabled = false
 	inventoryGui.Enabled = false
 	itemInfo.Parent.Enabled = false
-	
+
 	inventoryGui = gui:WaitForChild("Inventory")
 	itemInfo = inventoryGui.positioning:WaitForChild("ItemInfo")
 	render()
