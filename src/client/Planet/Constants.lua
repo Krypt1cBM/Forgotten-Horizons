@@ -3,8 +3,12 @@ local Constants = {}
 Constants.MAX_MESH_SIZE = 2048 * 0.98
 Constants.RADIUS = 5000
 Constants.RESOLUTION = 32
+Constants.GRAVITY_STRENGTH = 500
 Constants.PLANET_CENTER = Vector3.zero
 Constants.ChunksPerFace = 16
+
+Constants.MOVE_SPEED = 16
+Constants.TURN_SPEED = math.rad(540)
 
 Constants.Faces = {
 	["+X"] = {

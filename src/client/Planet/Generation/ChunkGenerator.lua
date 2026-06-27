@@ -1,5 +1,5 @@
-local Constants = require(script.Parent.Constants)
-local CubeSphere = require(script.Parent.CubeSphere)
+local Constants = require(script.Parent.Parent.Constants)
+local CubeSphere = require(script.Parent.Parent.CubeSphere)
 local ChunkGenerator = {}
 
 function ChunkGenerator.Generate(EditableMesh, FaceName, ChunkX, ChunkY)
