@@ -9,6 +9,7 @@ Constants.ChunksPerFace = 16
 
 Constants.MOVE_SPEED = 16
 Constants.TURN_SPEED = math.rad(540)
+Constants.SENSITIVITY = 0.003
 
 Constants.Faces = {
 	["+X"] = {

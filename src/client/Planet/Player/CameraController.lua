@@ -4,13 +4,18 @@ local CameraController = {}
 
 local Camera
 
+local Orbiting = false
+local OrbitYaw = 0
+local OrbitPitch = 0
+
 local Distance = 12
 local Height = 3
 
-local Sensitivity = 0.003
-
 local MinPitch = math.rad(-80)
 local MaxPitch = math.rad(80)
+
+local CameraForward = Vector3.zAxis
+local CameraRight = Vector3.xAxis
 
 function CameraController.Initialize()
 	Camera = PlayerTracker.Camera
