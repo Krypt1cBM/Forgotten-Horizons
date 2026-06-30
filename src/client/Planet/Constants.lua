@@ -1,6 +1,6 @@
 local Constants = {}
 
-Constants.PlanetConstants = { --most of these will come from seed or another source
+Constants.Planet = { --most of these will come from seed or another source
 	MAX_MESH_SIZE = 2048 * 0.98,
 	RADIUS = 5000,
 	RESOLUTION = 32,
@@ -10,12 +10,12 @@ Constants.PlanetConstants = { --most of these will come from seed or another sou
 
 Constants.GRAVITY_STRENGTH = 500
 
-Constants.MovementConstants = {
+Constants.Movement = {
 	MOVE_SPEED = 16,
 	TURN_SPEED = math.rad(540),
 }
 
-Constants.CameraConstants = {
+Constants.Camera = {
 	SENSITIVITY = 0.003,
 
 	MIN_DISTANCE = 5,

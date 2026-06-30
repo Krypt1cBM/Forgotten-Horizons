@@ -6,32 +6,33 @@ StreamPlanner.HiddenCorner = {
 	SW = 3,
 	SE = 4,
 }
-local CornerOffsets = {
+
+local cornerOffsets = {
 	[StreamPlanner.HiddenCorner.NW] = Vector2.new(-1, 1),
 	[StreamPlanner.HiddenCorner.NE] = Vector2.new(1, 1),
 	[StreamPlanner.HiddenCorner.SW] = Vector2.new(-1, -1),
 	[StreamPlanner.HiddenCorner.SE] = Vector2.new(1, -1),
 }
 
-function StreamPlanner.GetPlan(Face, CenterChunkX, CenterChunkY, HiddenCorner)
-	local Plan = {}
-	local Hidden = CornerOffsets[HiddenCorner]
+function StreamPlanner.getPlan(face, centerChunkX, centerChunkY, hiddenCorner)
+	local plan = {}
+	local hidden = cornerOffsets[hiddenCorner]
 
-	for OffsetY = -1, 1 do
-		for OffsetX = -1, 1 do
-			if OffsetX == Hidden.X and OffsetY == Hidden.Y then
+	for offsetY = -1, 1 do
+		for offsetX = -1, 1 do
+			if offsetX == hidden.X and offsetY == hidden.Y then
 				continue
 			end
 
-			table.insert(Plan, {
-				Face = Face,
-				ChunkX = CenterChunkX + OffsetX,
-				ChunkY = CenterChunkY + OffsetY,
+			table.insert(plan, {
+				face = face,
+				chunkX = centerChunkX + offsetX,
+				chunkY = centerChunkY + offsetY,
 			})
 		end
 	end
 
-	return Plan
+	return plan
 end
 
 return StreamPlanner

@@ -1,43 +1,44 @@
 local Constants = require(script.Parent.Parent.Constants)
 local CubeSphere = require(script.Parent.Parent.CubeSphere)
+
 local ChunkGenerator = {}
 
-function ChunkGenerator.Generate(EditableMesh, FaceName, ChunkX, ChunkY)
-	local Vertices = {}
+function ChunkGenerator.generate(editableMesh, faceName, chunkX, chunkY)
+	local vertices = {}
 
-	local uMin, uMax, vMin, vMax = CubeSphere.GetChunkBounds(ChunkX, ChunkY)
+	local uMin, uMax, vMin, vMax = CubeSphere.getChunkBounds(chunkX, chunkY)
 
-	for y = 0, Constants.PlanetConstants.RESOLUTION do
-		Vertices[y] = {}
+	for y = 0, Constants.Planet.RESOLUTION do
+		vertices[y] = {}
 
-		for x = 0, Constants.PlanetConstants.RESOLUTION do
-			local alphaX = x / Constants.PlanetConstants.RESOLUTION
-			local alphaY = y / Constants.PlanetConstants.RESOLUTION
+		for x = 0, Constants.Planet.RESOLUTION do
+			local alphaX = x / Constants.Planet.RESOLUTION
+			local alphaY = y / Constants.Planet.RESOLUTION
 
 			local u = uMin + alphaX * (uMax - uMin)
 			local v = vMin + alphaY * (vMax - vMin)
 
-			local CubePoint = CubeSphere.GetCubePoint(FaceName, u, v)
-			local Normal = CubeSphere.CubeToSphere(CubePoint)
+			local cubePoint = CubeSphere.getCubePoint(faceName, u, v)
+			local normal = CubeSphere.cubeToSphere(cubePoint)
 
-			local Height = 0
+			local height = 0
 
-			local SpherePoint = Constants.PlanetConstants.CENTER + Normal * (Constants.PlanetConstants.RADIUS + Height)
+			local spherePoint = Constants.Planet.CENTER + normal * (Constants.Planet.RADIUS + height)
 
-			local VertexId = EditableMesh:AddVertex(SpherePoint)
-			Vertices[y][x] = VertexId
+			local vertexId = editableMesh:AddVertex(spherePoint)
+			vertices[y][x] = vertexId
 		end
 	end
 
-	for y = 0, Constants.PlanetConstants.RESOLUTION - 1 do
-		for x = 0, Constants.PlanetConstants.RESOLUTION - 1 do
-			local a = Vertices[y][x]
-			local b = Vertices[y][x + 1]
-			local c = Vertices[y + 1][x]
-			local d = Vertices[y + 1][x + 1]
+	for y = 0, Constants.Planet.RESOLUTION - 1 do
+		for x = 0, Constants.Planet.RESOLUTION - 1 do
+			local a = vertices[y][x]
+			local b = vertices[y][x + 1]
+			local c = vertices[y + 1][x]
+			local d = vertices[y + 1][x + 1]
 
-			EditableMesh:AddTriangle(a, b, c)
-			EditableMesh:AddTriangle(b, d, c)
+			editableMesh:AddTriangle(a, b, c)
+			editableMesh:AddTriangle(b, d, c)
 		end
 	end
 end

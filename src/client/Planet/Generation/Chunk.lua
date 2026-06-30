@@ -8,46 +8,44 @@ Chunk.__index = Chunk
 function Chunk.new()
 	local self = setmetatable({}, Chunk)
 
-	self.Face = nil
-	self.ChunkX = nil
-	self.ChunkY = nil
+	self.face = nil
+	self.chunkX = nil
+	self.chunkY = nil
 
-	self.MeshPart = nil
+	self.meshPart = nil
 
 	return self
 end
 
-function Chunk:BuildMesh()
-	local EditableMesh = AssetService:CreateEditableMesh()
+function Chunk:buildMesh()
+	local editableMesh = AssetService:CreateEditableMesh()
 
-	ChunkGenerator.Generate(EditableMesh, self.Face, self.ChunkX, self.ChunkY)
+	ChunkGenerator.generate(editableMesh, self.face, self.chunkX, self.chunkY)
 
-	local MeshPart = AssetService:CreateMeshPartAsync(Content.fromObject(EditableMesh), {
+	local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
 		CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
 	})
 
-	--EditableMesh:Destroy()
+	meshPart.Anchored = true
+	meshPart.Parent = workspace
 
-	MeshPart.Anchored = true
-	MeshPart.Parent = workspace
-
-	return MeshPart
+	return meshPart
 end
 
-function Chunk:Generate(Face, ChunkX, ChunkY)
-	self.Face = Face
-	self.ChunkX = ChunkX
-	self.ChunkY = ChunkY
+function Chunk:generate(face, chunkX, chunkY)
+	self.face = face
+	self.chunkX = chunkX
+	self.chunkY = chunkY
 
-	if self.MeshPart then
-		self.MeshPart:Destroy()
+	if self.meshPart then
+		self.meshPart:Destroy()
 	end
 
-	self.MeshPart = self:BuildMesh()
+	self.meshPart = self:buildMesh()
 end
 
-function Chunk:Recycle(Face, ChunkX, ChunkY)
-	self:Generate(Face, ChunkX, ChunkY)
+function Chunk:recycle(face, chunkX, chunkY)
+	self:generate(face, chunkX, chunkY)
 end
 
 return Chunk

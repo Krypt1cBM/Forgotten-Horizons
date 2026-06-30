@@ -2,44 +2,45 @@ local Players = game:GetService("Players")
 
 local PlayerTracker = {}
 
-local Player = Players.LocalPlayer
-PlayerTracker.Character = nil
-PlayerTracker.Humanoid = nil
-PlayerTracker.RootPart = nil
+local player = Players.LocalPlayer
 
-PlayerTracker.UpVector = Vector3.yAxis
-PlayerTracker.GravityDirection = -Vector3.yAxis
+PlayerTracker.character = nil
+PlayerTracker.humanoid = nil
+PlayerTracker.rootPart = nil
 
-PlayerTracker.ForwardVector = Vector3.zAxis --is facing
-PlayerTracker.DesiredForward = Vector3.zAxis --want to face
-PlayerTracker.RightVector = Vector3.xAxis
+PlayerTracker.upVector = Vector3.yAxis
+PlayerTracker.gravityDirection = -Vector3.yAxis
 
-PlayerTracker.Position = Vector3.zero
+PlayerTracker.forwardVector = Vector3.zAxis -- is facing
+PlayerTracker.desiredForward = Vector3.zAxis -- want to face
+PlayerTracker.rightVector = Vector3.xAxis
 
-local function SetCharacter(Character)
-	PlayerTracker.Character = Character
-	PlayerTracker.Humanoid = Character:WaitForChild("Humanoid")
-	PlayerTracker.RootPart = Character:WaitForChild("HumanoidRootPart")
+PlayerTracker.position = Vector3.zero
+
+local function setCharacter(character)
+	PlayerTracker.character = character
+	PlayerTracker.humanoid = character:WaitForChild("Humanoid")
+	PlayerTracker.rootPart = character:WaitForChild("HumanoidRootPart")
 end
 
-function PlayerTracker.Initialize()
-	PlayerTracker.Camera = workspace.CurrentCamera
+function PlayerTracker.initialize()
+	PlayerTracker.camera = workspace.CurrentCamera
 
-	local Character = Player.Character or Player.CharacterAdded:Wait()
-	SetCharacter(Character)
+	local character = player.Character or player.CharacterAdded:Wait()
+	setCharacter(character)
 
-	Player.CharacterAdded:Connect(SetCharacter)
+	player.CharacterAdded:Connect(setCharacter)
 
-	local PlayerScript = Player:WaitForChild("PlayerScripts")
-	local PlayerModule = require(PlayerScript:WaitForChild("PlayerModule"))
+	local playerScript = player:WaitForChild("PlayerScripts")
+	local playerModule = require(playerScript:WaitForChild("PlayerModule"))
 
-	local Controls = PlayerModule:GetControls()
-	Controls:Disable()
+	local controls = playerModule:GetControls()
+	controls:Disable()
 end
 
-function PlayerTracker.Update()
-	if PlayerTracker.RootPart then
-		PlayerTracker.Position = PlayerTracker.RootPart.Position
+function PlayerTracker.update()
+	if PlayerTracker.rootPart then
+		PlayerTracker.position = PlayerTracker.rootPart.Position
 	end
 end
 

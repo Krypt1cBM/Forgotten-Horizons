@@ -1,27 +1,28 @@
 local UIS = game:GetService("UserInputService")
+
 local PlayerTracker = require(script.Parent.PlayerTracker)
 local Constants = require(script.Parent.Parent.Constants)
 local MathUtils = require(game.ReplicatedStorage.Scripts.MathUtils)
 
 local CameraController = {}
 
-local Camera
+local camera
 
-local OrbitHeld = false
-local OrbitLocked = false
+local orbitHeld = false
+local orbitLocked = false
 
-local CameraYaw = 0
-local CameraPitch = 0
+local cameraYaw = 0
+local cameraPitch = 0
 
-local Distance = 12
-local Height = 1
+local distance = 12
+local height = 1
 
-local MouseDelta = Vector2.zero
-local ScrollDelta = 0
+local mouseDelta = Vector2.zero
+local scrollDelta = 0
 
 function CameraController.Initialize()
-	Camera = PlayerTracker.Camera
-	Camera.CameraType = Enum.CameraType.Scriptable
+	camera = PlayerTracker.Camera
+	camera.CameraType = Enum.CameraType.Scriptable
 
 	UIS.InputBegan:Connect(function(input, gp)
 		if gp then
@@ -30,7 +31,7 @@ function CameraController.Initialize()
 
 		if input.UserInputType == Enum.UserInputType.MouseButton2 then
 			UIS.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
-			OrbitHeld = true
+			orbitHeld = true
 		end
 	end)
 
@@ -41,7 +42,7 @@ function CameraController.Initialize()
 
 		if input.UserInputType == Enum.UserInputType.MouseButton2 then
 			UIS.MouseBehavior = Enum.MouseBehavior.Default
-			OrbitHeld = false
+			orbitHeld = false
 		end
 	end)
 
@@ -49,67 +50,65 @@ function CameraController.Initialize()
 		if gp then
 			return
 		end
+
 		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			MouseDelta = input.Delta
+			mouseDelta = input.Delta
 		elseif input.UserInputType == Enum.UserInputType.MouseWheel then
-			ScrollDelta = input.Position.Z
+			scrollDelta = input.Position.Z
 		end
 	end)
 end
 
-local function CalculateOffset(Up)
-	local CameraOffset = Vector3.new(0, Height, -Distance)
+local function calculateOffset(up)
+	local cameraOffset = Vector3.new(0, height, -distance)
 
-	local YawOffset = CFrame.fromAxisAngle(Up, CameraYaw)
-	local RotatedOffset = YawOffset:VectorToWorldSpace(CameraOffset)
+	local yawOffset = CFrame.fromAxisAngle(up, cameraYaw)
+	local rotatedOffset = yawOffset:VectorToWorldSpace(cameraOffset)
 
-	local BoomDirection = RotatedOffset.Unit
-	local CameraRight = BoomDirection:Cross(Up)
+	local boomDirection = rotatedOffset.Unit
+	local cameraRight = boomDirection:Cross(up)
 
-	local PitchRotation = CFrame.fromAxisAngle(CameraRight, CameraPitch)
-	return PitchRotation:VectorToWorldSpace(RotatedOffset)
+	local pitchRotation = CFrame.fromAxisAngle(cameraRight, cameraPitch)
+	return pitchRotation:VectorToWorldSpace(rotatedOffset)
 end
 
 function CameraController.Update()
-	if OrbitHeld or OrbitLocked then
-		CameraYaw -= MouseDelta.X * Constants.CameraConstants.SENSITIVITY
-		CameraPitch += MouseDelta.Y * Constants.CameraConstants.SENSITIVITY
-		CameraPitch = math.clamp(CameraPitch, Constants.CameraConstants.MIN_PITCH, Constants.CameraConstants.MAX_PITCH)
-		MouseDelta = Vector2.zero
+	if orbitHeld or orbitLocked then
+		cameraYaw -= mouseDelta.X * Constants.Camera.SENSITIVITY
+		cameraPitch += mouseDelta.Y * Constants.Camera.SENSITIVITY
+		cameraPitch = math.clamp(cameraPitch, Constants.Camera.MIN_PITCH, Constants.Camera.MAX_PITCH)
+		mouseDelta = Vector2.zero
 	end
 
-	local Up = PlayerTracker.UpVector
-	local CameraTarget = PlayerTracker.Position + Up * Height
+	local up = PlayerTracker.UpVector
+	local cameraTarget = PlayerTracker.Position + up * height
 
-	if ScrollDelta ~= 0 then
-		local DistanceFactor = MathUtils.InverseLerp(
-			Distance,
-			Constants.CameraConstants.MIN_DISTANCE,
-			Constants.CameraConstants.MAX_DISTANCE
-		)
-		local ZoomFactor = MathUtils.SmoothStep(DistanceFactor)
-		local FinalZoomSpeed = MathUtils.Lerp(
-			Constants.CameraConstants.MIN_ZOOM_SPEED,
-			Constants.CameraConstants.MAX_ZOOM_SPEED,
-			ZoomFactor
-		)
+	if scrollDelta ~= 0 then
+		local distanceFactor =
+			MathUtils.InverseLerp(distance, Constants.Camera.MIN_DISTANCE, Constants.Camera.MAX_DISTANCE)
 
-		Distance -= ScrollDelta * FinalZoomSpeed
+		local zoomFactor = MathUtils.SmoothStep(distanceFactor)
+
+		local finalZoomSpeed =
+			MathUtils.Lerp(Constants.Camera.MIN_ZOOM_SPEED, Constants.Camera.MAX_ZOOM_SPEED, zoomFactor)
+
+		distance -= scrollDelta * finalZoomSpeed
 	end
 
-	Distance = math.clamp(Distance, Constants.CameraConstants.MIN_DISTANCE, Constants.CameraConstants.MAX_DISTANCE)
-	ScrollDelta = 0
+	distance = math.clamp(distance, Constants.Camera.MIN_DISTANCE, Constants.Camera.MAX_DISTANCE)
+	scrollDelta = 0
 
-	local CameraPosition = CameraTarget + CalculateOffset(Up)
+	local cameraPosition = cameraTarget + calculateOffset(up)
 
-	Camera.CFrame = CFrame.lookAt(CameraPosition, CameraTarget, Up)
+	camera.CFrame = CFrame.lookAt(cameraPosition, cameraTarget, up)
 end
 
-function CameraController.GetForward()
-	return Camera.CFrame.LookVector
+function CameraController.getForward()
+	return camera.CFrame.LookVector
 end
-function CameraController.GetRight()
-	return Camera.CFrame.RightVector
+
+function CameraController.getRight()
+	return camera.CFrame.RightVector
 end
 
 return CameraController

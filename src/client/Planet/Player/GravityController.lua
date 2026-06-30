@@ -4,102 +4,99 @@ local Constants = require(script.Parent.Parent.Constants)
 
 local GravityController = {}
 
-local GravityForce
+local gravityForce
 
-local AlignOrientation
-local Attachment
+local alignOrientation
+local attachment
 
-function GravityController.Initialize()
-	local RootPart = PlayerTracker.RootPart
-	local Humanoid = PlayerTracker.Humanoid
+function GravityController.initialize()
+	local rootPart = PlayerTracker.RootPart
+	local humanoid = PlayerTracker.Humanoid
 
-	Humanoid.AutoRotate = false
-	Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-	Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+	humanoid.AutoRotate = false
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
 
-	GravityForce = Instance.new("VectorForce")
-	GravityForce.Name = "PlanetGravity"
+	gravityForce = Instance.new("VectorForce")
+	gravityForce.Name = "PlanetGravity"
 
-	Attachment = Instance.new("Attachment")
-	Attachment.Parent = RootPart
-	GravityForce.Attachment0 = Attachment
+	attachment = Instance.new("Attachment")
+	attachment.Parent = rootPart
+	gravityForce.Attachment0 = attachment
 
-	GravityForce.RelativeTo = Enum.ActuatorRelativeTo.World
-	GravityForce.ApplyAtCenterOfMass = true
-	GravityForce.Parent = RootPart
+	gravityForce.RelativeTo = Enum.ActuatorRelativeTo.World
+	gravityForce.ApplyAtCenterOfMass = true
+	gravityForce.Parent = rootPart
 
-	AlignOrientation = Instance.new("AlignOrientation")
-	AlignOrientation.Name = "PlanetAlignment"
-	AlignOrientation.Attachment0 = Attachment
-	AlignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
-	AlignOrientation.RigidityEnabled = true
-	AlignOrientation.Responsiveness = 200
-	AlignOrientation.Parent = RootPart
+	alignOrientation = Instance.new("AlignOrientation")
+	alignOrientation.Name = "PlanetAlignment"
+	alignOrientation.Attachment0 = attachment
+	alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	alignOrientation.RigidityEnabled = true
+	alignOrientation.Responsiveness = 200
+	alignOrientation.Parent = rootPart
 end
 
-function GravityController.GetGravityDirection(pos)
-	return (Constants.PlanetConstants.CENTER - pos).Unit
+function GravityController.getGravityDirection(position)
+	return (Constants.Planet.CENTER - position).Unit
 end
 
-function GravityController.AlignCharacter()
-	local RootPart = PlayerTracker.RootPart
-	if not RootPart then
+function GravityController.alignCharacter()
+	local rootPart = PlayerTracker.RootPart
+	if not rootPart then
 		return
 	end
 
-	local Up = PlayerTracker.UpVector
-	local Forward = PlayerTracker.ForwardVector
+	local up = PlayerTracker.UpVector
+	local forward = PlayerTracker.ForwardVector
 
-	assert(math.abs(Forward:Dot(Up)) < 0.99, "ForwardVector is parallel to UpVector")
+	assert(math.abs(forward:Dot(up)) < 0.99, "ForwardVector is parallel to UpVector")
 
-	local Right = Forward:Cross(Up).Unit
-	Forward = Up:Cross(Right).Unit
+	local right = forward:Cross(up).Unit
+	forward = up:Cross(right).Unit
 
-	PlayerTracker.RightVector = Right
-	PlayerTracker.ForwardVector = Forward
+	PlayerTracker.RightVector = right
+	PlayerTracker.ForwardVector = forward
 
-	AlignOrientation.CFrame = CFrame.fromMatrix(Vector3.zero, Right, Up, -Forward)
+	alignOrientation.CFrame = CFrame.fromMatrix(Vector3.zero, right, up, -forward)
 end
 
-local function RotateTowards(Current, Target, MaxRadians)
-	Current = Current.Unit
-	Target = Target.Unit
+local function rotateTowards(current, target, maxRadians)
+	current = current.Unit
+	target = target.Unit
 
-	local Dot = math.clamp(Current:Dot(Target), -1, 1)
-	local Angle = math.acos(Dot)
+	local dot = math.clamp(current:Dot(target), -1, 1)
+	local angle = math.acos(dot)
 
-	if Angle <= MaxRadians then
-		return Target
+	if angle <= maxRadians then
+		return target
 	end
 
-	local Axis = Current:Cross(Target)
+	local axis = current:Cross(target)
 
-	if Axis.Magnitude < 0.001 then
-		Axis = PlayerTracker.UpVector
+	if axis.Magnitude < 0.001 then
+		axis = PlayerTracker.UpVector
 	else
-		Axis = Axis.Unit
+		axis = axis.Unit
 	end
 
-	local Rotation = CFrame.fromAxisAngle(Axis, MaxRadians)
-	return Rotation:VectorToWorldSpace(Current)
+	local rotation = CFrame.fromAxisAngle(axis, maxRadians)
+	return rotation:VectorToWorldSpace(current)
 end
 
-function GravityController.Update(dt)
-	local Position = PlayerTracker.Position
-	local Direction = GravityController.GetGravityDirection(Position)
+function GravityController.update(dt)
+	local position = PlayerTracker.Position
+	local direction = GravityController.getGravityDirection(position)
 
-	GravityForce.Force = Direction * Constants.GRAVITY_STRENGTH
+	gravityForce.Force = direction * Constants.GRAVITY_STRENGTH
 
-	PlayerTracker.GravityDirection = Direction
-	PlayerTracker.UpVector = -Direction
+	PlayerTracker.GravityDirection = direction
+	PlayerTracker.UpVector = -direction
 
-	PlayerTracker.ForwardVector = RotateTowards(
-		PlayerTracker.ForwardVector,
-		PlayerTracker.DesiredForward,
-		Constants.MovementConstants.TURN_SPEED * dt
-	)
+	PlayerTracker.ForwardVector =
+		rotateTowards(PlayerTracker.ForwardVector, PlayerTracker.DesiredForward, Constants.Movement.TURN_SPEED * dt)
 
-	GravityController.AlignCharacter()
+	GravityController.alignCharacter()
 end
 
 return GravityController
