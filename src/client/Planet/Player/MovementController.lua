@@ -1,6 +1,7 @@
 local UIS = game:GetService("UserInputService")
 
 local PlayerTracker = require(script.Parent.PlayerTracker)
+local CameraController = require(script.Parent.CameraController)
 local Constants = require(script.Parent.Parent.Constants)
 
 local MovementController = {}
@@ -41,6 +42,24 @@ function MovementController.Initialize()
 	end)
 end
 
-function MovementController.Update(dt) end
+function MovementController.Update()
+	if MoveInput.Magnitude == 0 then
+		PlayerTracker.Humanoid:Move(Vector3.zero)
+		return
+	end
+
+	local CameraForward = CameraController.GetForward()
+	local CameraRight = CameraController.GetRight()
+
+	local Up = PlayerTracker.UpVector
+
+	CameraForward = (CameraForward - Up * CameraForward:Dot(Up)).Unit
+	CameraRight = (CameraRight - Up * CameraRight:Dot(Up)).Unit
+
+	local MoveDirection = (CameraForward * MoveInput.Y + CameraRight * MoveInput.X).Unit
+
+	PlayerTracker.DesiredForward = MoveDirection
+	PlayerTracker.Humanoid:Move(MoveDirection)
+end
 
 return MovementController

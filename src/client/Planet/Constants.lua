@@ -1,15 +1,33 @@
 local Constants = {}
 
-Constants.MAX_MESH_SIZE = 2048 * 0.98
-Constants.RADIUS = 5000
-Constants.RESOLUTION = 32
-Constants.GRAVITY_STRENGTH = 500
-Constants.PLANET_CENTER = Vector3.zero
-Constants.ChunksPerFace = 16
+Constants.PlanetConstants = { --most of these will come from seed or another source
+	MAX_MESH_SIZE = 2048 * 0.98,
+	RADIUS = 5000,
+	RESOLUTION = 32,
+	CENTER = Vector3.zero,
+	ChunksPerFace = 16,
+}
 
-Constants.MOVE_SPEED = 16
-Constants.TURN_SPEED = math.rad(540)
-Constants.SENSITIVITY = 0.003
+Constants.GRAVITY_STRENGTH = 500
+
+Constants.MovementConstants = {
+	MOVE_SPEED = 16,
+	TURN_SPEED = math.rad(540),
+}
+
+Constants.CameraConstants = {
+	SENSITIVITY = 0.003,
+
+	MIN_DISTANCE = 5,
+	MAX_DISTANCE = 30,
+
+	MIN_PITCH = math.rad(-70),
+	MAX_PITCH = math.rad(70),
+
+	ZOOM_SPEED = 2,
+	MIN_ZOOM_SPEED = 0.5,
+	MAX_ZOOM_SPEED = 3,
+}
 
 Constants.Faces = {
 	["+X"] = {

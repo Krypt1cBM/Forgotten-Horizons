@@ -38,7 +38,7 @@ function GravityController.Initialize()
 end
 
 function GravityController.GetGravityDirection(pos)
-	return (Constants.PLANET_CENTER - pos).Unit
+	return (Constants.PlanetConstants.CENTER - pos).Unit
 end
 
 function GravityController.AlignCharacter()
@@ -54,6 +54,9 @@ function GravityController.AlignCharacter()
 
 	local Right = Forward:Cross(Up).Unit
 	Forward = Up:Cross(Right).Unit
+
+	PlayerTracker.RightVector = Right
+	PlayerTracker.ForwardVector = Forward
 
 	AlignOrientation.CFrame = CFrame.fromMatrix(Vector3.zero, Right, Up, -Forward)
 end
@@ -90,10 +93,13 @@ function GravityController.Update(dt)
 	PlayerTracker.GravityDirection = Direction
 	PlayerTracker.UpVector = -Direction
 
-	GravityController.AlignCharacter()
+	PlayerTracker.ForwardVector = RotateTowards(
+		PlayerTracker.ForwardVector,
+		PlayerTracker.DesiredForward,
+		Constants.MovementConstants.TURN_SPEED * dt
+	)
 
-	PlayerTracker.ForwardVector =
-		RotateTowards(PlayerTracker.ForwardVector, PlayerTracker.DesiredForward, Constants.TURN_SPEED * dt)
+	GravityController.AlignCharacter()
 end
 
 return GravityController

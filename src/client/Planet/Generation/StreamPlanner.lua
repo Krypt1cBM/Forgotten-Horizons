@@ -14,8 +14,6 @@ local CornerOffsets = {
 }
 
 function StreamPlanner.GetPlan(Face, CenterChunkX, CenterChunkY, HiddenCorner)
-	print(Face, CenterChunkX, CenterChunkY, HiddenCorner)
-
 	local Plan = {}
 	local Hidden = CornerOffsets[HiddenCorner]
 
