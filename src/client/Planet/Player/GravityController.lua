@@ -14,8 +14,11 @@ function GravityController.initialize()
 	local humanoid = PlayerTracker.humanoid
 
 	humanoid.AutoRotate = false
-	humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Flying, false)
 	humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+	humanoid:SetStateEnabled(Enum.HumanoidStateType.StrafingNoPhysics, false)
 
 	gravityForce = Instance.new("VectorForce")
 	gravityForce.Name = "PlanetGravity"

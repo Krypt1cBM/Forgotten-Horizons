@@ -8,14 +8,16 @@ PlayerTracker.character = nil
 PlayerTracker.humanoid = nil
 PlayerTracker.rootPart = nil
 
-PlayerTracker.upVector = Vector3.yAxis
 PlayerTracker.gravityDirection = -Vector3.yAxis
 
+PlayerTracker.upVector = Vector3.yAxis
 PlayerTracker.forwardVector = Vector3.zAxis -- is facing
 PlayerTracker.desiredForward = Vector3.zAxis -- want to face
 PlayerTracker.rightVector = Vector3.xAxis
 
 PlayerTracker.position = Vector3.zero
+PlayerTracker.isGrounded = false
+PlayerTracker.groundResult = nil
 
 local function setCharacter(character)
 	PlayerTracker.character = character

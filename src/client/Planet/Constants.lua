@@ -12,7 +12,10 @@ Constants.GRAVITY_STRENGTH = 500
 
 Constants.Movement = {
 	MOVE_SPEED = 16,
+	SPRINT_SPEED = 24,
+	JUMP_FORCE = 50,
 	TURN_SPEED = math.rad(540),
+	GROUND_CHECK_DISTANCE = 3.5,
 }
 
 Constants.Camera = {
