@@ -77,6 +77,7 @@ local function jump()
 end
 
 function MovementController.update()
+	print(PlayerTracker.humanoid:GetState())
 	updateGrounded()
 
 	local justLanded = not wasGrounded and PlayerTracker.isGrounded
