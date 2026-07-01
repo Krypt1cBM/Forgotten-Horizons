@@ -10,8 +10,8 @@ local alignOrientation
 local attachment
 
 function GravityController.initialize()
-	local rootPart = PlayerTracker.RootPart
-	local humanoid = PlayerTracker.Humanoid
+	local rootPart = PlayerTracker.rootPart
+	local humanoid = PlayerTracker.humanoid
 
 	humanoid.AutoRotate = false
 	humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
@@ -42,21 +42,21 @@ function GravityController.getGravityDirection(position)
 end
 
 function GravityController.alignCharacter()
-	local rootPart = PlayerTracker.RootPart
+	local rootPart = PlayerTracker.rootPart
 	if not rootPart then
 		return
 	end
 
-	local up = PlayerTracker.UpVector
-	local forward = PlayerTracker.ForwardVector
+	local up = PlayerTracker.upVector
+	local forward = PlayerTracker.forwardVector
 
 	assert(math.abs(forward:Dot(up)) < 0.99, "ForwardVector is parallel to UpVector")
 
 	local right = forward:Cross(up).Unit
 	forward = up:Cross(right).Unit
 
-	PlayerTracker.RightVector = right
-	PlayerTracker.ForwardVector = forward
+	PlayerTracker.rightVector = right
+	PlayerTracker.forwardVector = forward
 
 	alignOrientation.CFrame = CFrame.fromMatrix(Vector3.zero, right, up, -forward)
 end
@@ -75,7 +75,7 @@ local function rotateTowards(current, target, maxRadians)
 	local axis = current:Cross(target)
 
 	if axis.Magnitude < 0.001 then
-		axis = PlayerTracker.UpVector
+		axis = PlayerTracker.upVector
 	else
 		axis = axis.Unit
 	end
@@ -85,16 +85,16 @@ local function rotateTowards(current, target, maxRadians)
 end
 
 function GravityController.update(dt)
-	local position = PlayerTracker.Position
+	local position = PlayerTracker.position
 	local direction = GravityController.getGravityDirection(position)
 
 	gravityForce.Force = direction * Constants.GRAVITY_STRENGTH
 
-	PlayerTracker.GravityDirection = direction
-	PlayerTracker.UpVector = -direction
+	PlayerTracker.gravityDirection = direction
+	PlayerTracker.upVector = -direction
 
-	PlayerTracker.ForwardVector =
-		rotateTowards(PlayerTracker.ForwardVector, PlayerTracker.DesiredForward, Constants.Movement.TURN_SPEED * dt)
+	PlayerTracker.forwardVector =
+		rotateTowards(PlayerTracker.forwardVector, PlayerTracker.desiredForward, Constants.Movement.TURN_SPEED * dt)
 
 	GravityController.alignCharacter()
 end

@@ -27,6 +27,9 @@ Constants.Camera = {
 	ZOOM_SPEED = 2,
 	MIN_ZOOM_SPEED = 0.5,
 	MAX_ZOOM_SPEED = 3,
+
+	RADIUS = 0.5,
+	COLLISION_PADDING = 0.1,
 }
 
 Constants.Faces = {

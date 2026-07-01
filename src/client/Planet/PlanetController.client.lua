@@ -1,26 +1,33 @@
 local rs = game:GetService("RunService")
 
+--Player
 local PlayerTracker = require(script.Parent.Player.PlayerTracker)
 local GravityController = require(script.Parent.Player.GravityController)
 local CameraController = require(script.Parent.Player.CameraController)
 local MovementController = require(script.Parent.Player.MovementController)
+local CameraCollision = require(script.Parent.Player.CameraCollision)
+
+--Generation
 local ChunkManager = require(script.Parent.Generation.ChunkManager)
 
-PlayerTracker.Initialize()
-GravityController.Initialize()
-CameraController.Initialize()
-MovementController.Initialize()
+--Player
+PlayerTracker.initialize()
+GravityController.initialize()
+CameraController.initialize()
+MovementController.initialize()
+CameraCollision.initialize()
 
-ChunkManager.Initialize()
+--Generation
+ChunkManager.initialize()
 
 rs.RenderStepped:Connect(function(dt)
-	CameraController.Update(dt)
+	CameraController.update(dt)
 end)
 
 rs.Heartbeat:Connect(function(dt)
-	PlayerTracker.Update(dt)
+	PlayerTracker.update(dt)
 
-	GravityController.Update(dt)
-	MovementController.Update(dt)
-	ChunkManager.Update(dt)
+	GravityController.update(dt)
+	MovementController.update(dt)
+	ChunkManager.update(dt)
 end)
