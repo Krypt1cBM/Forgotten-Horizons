@@ -12,4 +12,8 @@ function MathUtils.inverseLerp(Current, Min, Max)
 	return (Current - Min) / (Max - Min)
 end
 
+function MathUtils.projectOntoPlane(vector, normal)
+	return vector - normal * vector:Dot(normal)
+end
+
 return MathUtils

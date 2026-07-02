@@ -70,6 +70,9 @@ local function calculateOffset(up)
 	local cameraRight = boomDirection:Cross(up)
 
 	local pitchRotation = CFrame.fromAxisAngle(cameraRight, cameraPitch)
+
+	print(PlayerTracker.upVector, cameraRight, boomDirection)
+
 	return pitchRotation:VectorToWorldSpace(rotatedOffset)
 end
 

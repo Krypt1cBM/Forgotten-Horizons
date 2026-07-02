@@ -11,10 +11,15 @@ Constants.Planet = { --most of these will come from seed or another source
 Constants.GRAVITY_ACCELERATION = 500
 
 Constants.Movement = {
-	MOVE_SPEED = 16,
+	MAX_SPEED = 16,
 	SPRINT_SPEED = 28,
+
+	GROUND_ACCELERATION = 800,
+	AIR_ACCELERATION = 20,
+
 	JUMP_FORCE = 50,
 	TURN_SPEED = math.rad(540),
+
 	GROUND_CHECK_DISTANCE = 3.5,
 }
 

@@ -3,6 +3,7 @@ local userInputService = game:GetService("UserInputService")
 local PlayerTracker = require(script.Parent.PlayerTracker)
 local CameraController = require(script.Parent.CameraController)
 local Constants = require(script.Parent.Parent.Constants)
+local MathUtils = require(game.ReplicatedStorage.Scripts.MathUtils)
 
 local MovementController = {}
 
@@ -10,13 +11,26 @@ local moveInput = Vector2.zero
 
 local sprinting = false
 local jumpStarted = false
-local wasGrounded = false
+
+local movementVectorForce
+local movementAttachment
 
 local raycastParams = RaycastParams.new()
 raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 function MovementController.initialize()
 	raycastParams.FilterDescendantsInstances = { PlayerTracker.character }
+
+	movementAttachment = Instance.new("Attachment")
+	movementAttachment.Name = "MovementAttachment"
+	movementAttachment.Parent = PlayerTracker.rootPart
+
+	movementVectorForce = Instance.new("VectorForce")
+	movementVectorForce.Name = "MovementForce"
+	movementVectorForce.Attachment0 = movementAttachment
+	movementVectorForce.RelativeTo = Enum.ActuatorRelativeTo.World
+	movementVectorForce.ApplyAtCenterOfMass = true
+	movementVectorForce.Parent = PlayerTracker.rootPart
 
 	userInputService.InputBegan:Connect(function(input, gp)
 		if gp then
@@ -72,16 +86,16 @@ local function jump()
 	rootPart:ApplyImpulse(PlayerTracker.upVector * Constants.Movement.JUMP_FORCE * rootPart.AssemblyMass)
 end
 
-function MovementController.update()
+function MovementController.update(dt)
 	updateGrounded()
 
 	if PlayerTracker.isGrounded and jumpStarted then
 		jump()
 	end
 
-	local moveSpeed = Constants.Movement.MOVE_SPEED
+	local targetSpeed = Constants.Movement.MAX_SPEED
 	if sprinting then
-		moveSpeed = Constants.Movement.SPRINT_SPEED
+		targetSpeed = Constants.Movement.SPRINT_SPEED
 	end
 
 	local moveDirection = Vector3.zero
@@ -99,11 +113,35 @@ function MovementController.update()
 		PlayerTracker.desiredForward = moveDirection
 	end
 
-	PlayerTracker.humanoid.WalkSpeed = moveSpeed
-	PlayerTracker.humanoid:Move(moveDirection)
+	local desiredVelocity = moveDirection * targetSpeed
+	local rootPart = PlayerTracker.rootPart
+	local currentVelocity = rootPart.AssemblyLinearVelocity
+
+	local horizontalVelocity = MathUtils.projectOntoPlane(currentVelocity, PlayerTracker.upVector)
+
+	local velocityError = desiredVelocity - horizontalVelocity
+
+	local acceleration = Constants.Movement.AIR_ACCELERATION
+	if PlayerTracker.isGrounded then
+		acceleration = Constants.Movement.GROUND_ACCELERATION
+	end
+
+	local maxVelocityChange = acceleration * dt
+	local velocityChange
+
+	if velocityError.Magnitude <= maxVelocityChange then
+		velocityChange = velocityError
+	else
+		velocityChange = velocityError.Unit * maxVelocityChange
+	end
+
+	local requiredAcceleration = velocityChange / dt
+
+	local movementForce = requiredAcceleration * PlayerTracker.rootPart.AssemblyMass
+	movementVectorForce.Force = movementForce
+	print(desiredVelocity, horizontalVelocity)
 
 	jumpStarted = false
-	wasGrounded = PlayerTracker.isGrounded
 end
 
 return MovementController

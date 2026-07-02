@@ -21,6 +21,7 @@ CameraCollision.initialize()
 ChunkManager.initialize()
 
 PlayerTracker.rootPart.Anchored = true
+PlayerTracker.humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
 rs.RenderStepped:Connect(function(dt)
 	CameraController.update(dt)
