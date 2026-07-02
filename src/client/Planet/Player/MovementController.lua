@@ -9,7 +9,6 @@ local MovementController = {}
 local moveInput = Vector2.zero
 
 local sprinting = false
-local jumpHeld = false
 local jumpStarted = false
 local wasGrounded = false
 
@@ -35,7 +34,6 @@ function MovementController.initialize()
 		elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
 			sprinting = true
 		elseif input.KeyCode == Enum.KeyCode.Space then
-			jumpHeld = true
 			jumpStarted = true
 		end
 	end)
@@ -55,8 +53,6 @@ function MovementController.initialize()
 			moveInput -= Vector2.new(1, 0)
 		elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
 			sprinting = false
-		elseif input.KeyCode == Enum.KeyCode.Space then
-			jumpHeld = false
 		end
 	end)
 end
@@ -77,15 +73,9 @@ local function jump()
 end
 
 function MovementController.update()
-	print(PlayerTracker.humanoid:GetState())
 	updateGrounded()
 
-	local justLanded = not wasGrounded and PlayerTracker.isGrounded
-
-	if jumpStarted then
-		print(PlayerTracker.isGrounded)
-	end
-	if PlayerTracker.isGrounded and (jumpStarted or (justLanded and jumpHeld)) then
+	if PlayerTracker.isGrounded and jumpStarted then
 		jump()
 	end
 

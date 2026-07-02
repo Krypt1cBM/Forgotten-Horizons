@@ -74,15 +74,20 @@ local function calculateOffset(up)
 end
 
 function CameraController.update()
+	local up = PlayerTracker.upVector
+	local cameraTarget = PlayerTracker.position + up * height
+
 	if orbitHeld or orbitLocked then
 		cameraYaw -= mouseDelta.X * Constants.Camera.SENSITIVITY
 		cameraPitch += mouseDelta.Y * Constants.Camera.SENSITIVITY
-		cameraPitch = math.clamp(cameraPitch, Constants.Camera.MIN_PITCH, Constants.Camera.MAX_PITCH)
+
+		local offset = math.acos(math.clamp(up:Dot(Vector3.yAxis), -1, 1))
+		local minPitch = math.rad(-70) + offset
+		local maxPitch = math.rad(70) + offset
+
+		cameraPitch = math.clamp(cameraPitch, minPitch, maxPitch)
 		mouseDelta = Vector2.zero
 	end
-
-	local up = PlayerTracker.upVector
-	local cameraTarget = PlayerTracker.position + up * height
 
 	if scrollDelta ~= 0 then
 		local distanceFactor =

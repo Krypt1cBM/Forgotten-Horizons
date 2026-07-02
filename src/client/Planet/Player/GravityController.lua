@@ -93,7 +93,7 @@ function GravityController.update(dt)
 	local position = PlayerTracker.position
 	local direction = GravityController.getGravityDirection(position)
 
-	gravityForce.Force = direction * Constants.GRAVITY_STRENGTH
+	gravityForce.Force = direction * Constants.GRAVITY_ACCELERATION * PlayerTracker.rootPart.AssemblyMass
 
 	PlayerTracker.gravityDirection = direction
 	PlayerTracker.upVector = -direction

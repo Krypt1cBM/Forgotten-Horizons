@@ -20,9 +20,13 @@ CameraCollision.initialize()
 --Generation
 ChunkManager.initialize()
 
+PlayerTracker.rootPart.Anchored = true
+
 rs.RenderStepped:Connect(function(dt)
 	CameraController.update(dt)
 end)
+
+PlayerTracker.rootPart.Anchored = false
 
 rs.Heartbeat:Connect(function(dt)
 	PlayerTracker.update(dt)

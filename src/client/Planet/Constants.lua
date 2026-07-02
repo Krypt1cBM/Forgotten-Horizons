@@ -8,7 +8,7 @@ Constants.Planet = { --most of these will come from seed or another source
 	ChunksPerFace = 16,
 }
 
-Constants.GRAVITY_STRENGTH = 500
+Constants.GRAVITY_ACCELERATION = 500
 
 Constants.Movement = {
 	MOVE_SPEED = 16,
@@ -23,9 +23,6 @@ Constants.Camera = {
 
 	MIN_DISTANCE = 5,
 	MAX_DISTANCE = 30,
-
-	MIN_PITCH = math.rad(-70),
-	MAX_PITCH = math.rad(70),
 
 	ZOOM_SPEED = 2,
 	MIN_ZOOM_SPEED = 0.5,
