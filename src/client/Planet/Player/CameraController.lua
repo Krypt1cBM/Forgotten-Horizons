@@ -8,12 +8,13 @@ local CameraCollision = require(script.Parent.CameraCollision)
 local CameraController = {}
 
 local camera
-
-local orbitHeld = false
-local orbitLocked = false
+local cameraForwardReference
 
 local cameraYaw = 0
 local cameraPitch = 0
+
+local orbitHeld = false
+local orbitLocked = false
 
 local distance = 12
 local height = 1
@@ -24,6 +25,10 @@ local scrollDelta = 0
 function CameraController.initialize()
 	camera = PlayerTracker.camera
 	camera.CameraType = Enum.CameraType.Scriptable
+
+	local forward = PlayerTracker.forwardVector.Unit
+
+	cameraForwardReference = forward
 
 	UIS.InputBegan:Connect(function(input, gp)
 		if gp then
@@ -60,20 +65,36 @@ function CameraController.initialize()
 	end)
 end
 
+local function getCameraBasis(up)
+	local forward = cameraForwardReference
+
+	forward = forward - up * forward:Dot(up)
+
+	if forward.Magnitude < 0.001 then
+		forward = PlayerTracker.forwardVector
+		forward = forward - up * forward:Dot(up)
+	end
+	forward = forward.Unit
+
+	cameraForwardReference = forward
+
+	local right = forward:Cross(up).Unit
+	return right, forward
+end
+
 local function calculateOffset(up)
-	local cameraOffset = Vector3.new(0, 0, -distance)
+	local right, forward = getCameraBasis(up)
 
-	local yawOffset = CFrame.fromAxisAngle(up, cameraYaw)
-	local rotatedOffset = yawOffset:VectorToWorldSpace(cameraOffset)
+	local yawRotation = CFrame.fromAxisAngle(up, cameraYaw)
 
-	local boomDirection = rotatedOffset.Unit
-	local cameraRight = boomDirection:Cross(up)
+	forward = yawRotation:VectorToWorldSpace(forward)
+	right = yawRotation:VectorToWorldSpace(right)
 
-	local pitchRotation = CFrame.fromAxisAngle(cameraRight, cameraPitch)
+	local pitchRotation = CFrame.fromAxisAngle(right, cameraPitch)
 
-	print(PlayerTracker.upVector, cameraRight, boomDirection)
+	forward = pitchRotation:VectorToWorldSpace(forward)
 
-	return pitchRotation:VectorToWorldSpace(rotatedOffset)
+	return -forward * distance
 end
 
 function CameraController.update()
@@ -82,13 +103,10 @@ function CameraController.update()
 
 	if orbitHeld or orbitLocked then
 		cameraYaw -= mouseDelta.X * Constants.Camera.SENSITIVITY
-		cameraPitch += mouseDelta.Y * Constants.Camera.SENSITIVITY
+		cameraPitch -= mouseDelta.Y * Constants.Camera.SENSITIVITY
 
-		local offset = math.acos(math.clamp(up:Dot(Vector3.yAxis), -1, 1))
-		local minPitch = math.rad(-70) + offset
-		local maxPitch = math.rad(70) + offset
+		cameraPitch = math.clamp(cameraPitch, Constants.Camera.MIN_PITCH, Constants.Camera.MAX_PITCH)
 
-		cameraPitch = math.clamp(cameraPitch, minPitch, maxPitch)
 		mouseDelta = Vector2.zero
 	end
 
@@ -110,6 +128,7 @@ function CameraController.update()
 	local desiredPosition = cameraTarget + calculateOffset(up)
 
 	local safePosition = CameraCollision.resolve(cameraTarget, desiredPosition)
+
 	camera.CFrame = CFrame.lookAt(safePosition, cameraTarget, up)
 end
 

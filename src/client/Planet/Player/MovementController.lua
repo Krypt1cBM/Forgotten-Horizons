@@ -139,7 +139,6 @@ function MovementController.update(dt)
 
 	local movementForce = requiredAcceleration * PlayerTracker.rootPart.AssemblyMass
 	movementVectorForce.Force = movementForce
-	print(desiredVelocity, horizontalVelocity)
 
 	jumpStarted = false
 end

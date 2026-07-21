@@ -98,8 +98,12 @@ function GravityController.update(dt)
 	PlayerTracker.gravityDirection = direction
 	PlayerTracker.upVector = -direction
 
-	PlayerTracker.forwardVector =
+	local up = PlayerTracker.upVector
+
+	local forward =
 		rotateTowards(PlayerTracker.forwardVector, PlayerTracker.desiredForward, Constants.Movement.TURN_SPEED * dt)
+	forward = forward - up * forward:Dot(up)
+	PlayerTracker.forwardVector = forward.Unit
 
 	GravityController.alignCharacter()
 end

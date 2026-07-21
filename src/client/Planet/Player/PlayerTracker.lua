@@ -11,8 +11,8 @@ PlayerTracker.rootPart = nil
 PlayerTracker.gravityDirection = -Vector3.yAxis
 
 PlayerTracker.upVector = Vector3.yAxis
-PlayerTracker.forwardVector = Vector3.zAxis -- is facing
-PlayerTracker.desiredForward = Vector3.zAxis -- want to face
+PlayerTracker.forwardVector = Vector3.zAxis
+PlayerTracker.desiredForward = Vector3.zAxis
 PlayerTracker.rightVector = Vector3.xAxis
 
 PlayerTracker.position = Vector3.zero

@@ -11,8 +11,8 @@ Constants.Planet = { --most of these will come from seed or another source
 Constants.GRAVITY_ACCELERATION = 500
 
 Constants.Movement = {
-	MAX_SPEED = 16,
-	SPRINT_SPEED = 28,
+	MAX_SPEED = 20,
+	SPRINT_SPEED = 34,
 
 	GROUND_ACCELERATION = 800,
 	AIR_ACCELERATION = 20,
@@ -29,12 +29,24 @@ Constants.Camera = {
 	MIN_DISTANCE = 5,
 	MAX_DISTANCE = 30,
 
+	MIN_PITCH = math.rad(-70),
+	MAX_PITCH = math.rad(70),
+
 	ZOOM_SPEED = 2,
 	MIN_ZOOM_SPEED = 0.5,
 	MAX_ZOOM_SPEED = 3,
 
 	RADIUS = 0.5,
 	COLLISION_PADDING = 0.1,
+}
+
+Constants.Settings = {
+	Keybinds = {},
+	Camera = {
+		Sensitivity = 0.003,
+		PitchInversion = false,
+		YawInversion = false,
+	},
 }
 
 Constants.Faces = {
