@@ -11,6 +11,7 @@ local moveInput = Vector2.zero
 
 local sprinting = false
 local jumpStarted = false
+local canJump = true
 
 local movementVectorForce
 local movementAttachment
@@ -88,6 +89,17 @@ end
 
 function MovementController.update(dt)
 	updateGrounded()
+
+	if PlayerTracker.isGrounded then
+		local rootPart = PlayerTracker.rootPart
+		local velocity = rootPart.AssemblyLinearVelocity
+
+		local verticalVelocity = velocity:Dot(PlayerTracker.upVector)
+
+		if verticalVelocity < 0 then
+			rootPart.AssemblyLinearVelocity = velocity - PlayerTracker.upVector * verticalVelocity
+		end
+	end
 
 	if PlayerTracker.isGrounded and jumpStarted then
 		jump()
