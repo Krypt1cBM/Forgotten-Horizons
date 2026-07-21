@@ -11,7 +11,6 @@ local moveInput = Vector2.zero
 
 local sprinting = false
 local jumpStarted = false
-local canJump = true
 
 local movementVectorForce
 local movementAttachment
