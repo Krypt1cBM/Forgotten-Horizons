@@ -23,9 +23,16 @@ function Chunk:buildMesh(context)
 
 	ChunkGenerator.generate(editableMesh, context, self.location, self.chunkFrame)
 
-	local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
-		CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
-	})
+	local success, result = pcall(function()
+		return AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
+			CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
+		})
+	end)
+
+	if not success then
+		error(result)
+	end
+	local meshPart = result
 
 	meshPart.CFrame = self.chunkFrame
 

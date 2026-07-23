@@ -45,19 +45,13 @@ function ChunkManager.initialize()
 
 	local plan = StreamPlanner.getPlan(currentLocation, currentHiddenCorner)
 
-	local location = plan[1]
-	local chunk = Chunk.new()
-	chunk:generate(planetContext, location)
-
-	table.insert(physicalChunks, chunk)
-	--[[for _, location in ipairs(plan) do
+	for _, location in ipairs(plan) do
 		local chunk = Chunk.new()
 
 		chunk:generate(planetContext, location)
 
 		table.insert(physicalChunks, chunk)
-	end]]
-	--
+	end
 end
 
 function ChunkManager.update(playerTracker)

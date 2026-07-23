@@ -19,7 +19,7 @@ Constants.Movement = {
 	JUMP_FORCE = 80,
 	TURN_SPEED = math.rad(540),
 
-	GROUND_CHECK_DISTANCE = 3.5,
+	MIN_RAY_DISTANCE = 3,
 }
 
 Constants.Camera = {

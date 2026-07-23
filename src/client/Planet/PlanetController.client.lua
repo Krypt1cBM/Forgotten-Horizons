@@ -31,5 +31,5 @@ rs.Heartbeat:Connect(function(dt)
 
 	GravityController.update(dt)
 	MovementController.update(dt)
-	--ChunkManager.update(PlayerTracker)
+	ChunkManager.update(PlayerTracker)
 end)

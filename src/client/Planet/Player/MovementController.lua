@@ -71,11 +71,23 @@ function MovementController.initialize()
 	end)
 end
 
+local function getGroundRayDistance()
+	local rootPart = PlayerTracker.rootPart
+	local humanoid = PlayerTracker.humanoid
+
+	local characterHalfHeight = rootPart.Size.Y * 0.5
+	local hipHeight = humanoid.HipHeight
+	local tolerance = 2
+
+	return math.max(characterHalfHeight + hipHeight + tolerance, Constants.Movement.MIN_RAY_DISTANCE)
+end
+
 local function updateGrounded()
 	local origin = PlayerTracker.rootPart.Position - PlayerTracker.gravityDirection * 0.5
-	local direction = PlayerTracker.gravityDirection * Constants.Movement.GROUND_CHECK_DISTANCE
+	local direction = PlayerTracker.gravityDirection * getGroundRayDistance()
 
 	local result = workspace:Raycast(origin, direction, raycastParams)
+
 	PlayerTracker.isGrounded = result ~= nil
 	PlayerTracker.groundResult = result
 end
