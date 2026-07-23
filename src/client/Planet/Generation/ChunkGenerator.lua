@@ -20,10 +20,12 @@ function ChunkGenerator.generate(editableMesh, context, location, chunkFrame)
 			local cubePoint = CubeSphere.getCubePoint(location.face, u, v)
 			local normal = CubeSphere.cubeToSphere(cubePoint)
 
-			local height = 0
+			local direction = CubeSphere.cubeToSphere(cubePoint).Unit
 
-			local spherePoint = context.center + normal * (context.baseRadius + height)
+			local height = math.noise(direction.X * 3, direction.Y * 3, direction.Z * 3) * context.maxHeight
+			height = 0 --no terrain
 
+			local spherePoint = direction * (context.baseRadius + height)
 			local localPoint = chunkFrame:PointToObjectSpace(spherePoint)
 
 			local vertexId = editableMesh:AddVertex(localPoint)

@@ -18,6 +18,17 @@ function CubeSphere.cubeToSphere(v)
 	)
 end
 
+function CubeSphere.sphereToCube(faceName, direction)
+	local face = Constants.Faces[faceName]
+
+	local cubePoint = direction
+
+	local u = cubePoint:Dot(face.Right)
+	local v = cubePoint:Dot(face.Up)
+
+	return Vector3.new(u, v, 0)
+end
+
 function CubeSphere.getChunkBounds(context, chunkX, chunkY)
 	local chunkSize = 2 / context.faceChunkCount
 
@@ -54,6 +65,23 @@ function CubeSphere.getChunkFrame(context, face, chunkX, chunkY)
 	local forward = up:Cross(right).Unit
 
 	return CFrame.fromMatrix(position, right, up, -forward)
+end
+
+function CubeSphere.getChunkFromPosition(context, face, position)
+	local direction = (position - context.center).Unit
+
+	local cubePoint = CubeSphere.sphereToCube(face, direction)
+
+	local u = cubePoint.X
+	local v = cubePoint.Y
+
+	local normalizedX = (u + 1) * 0.5
+	local normalizedY = (v + 1) * 0.5
+
+	local chunkX = math.floor(normalizedX * context.faceChunkCount)
+	local chunkY = math.floor(normalizedY * context.faceChunkCount)
+
+	return chunkX, chunkY
 end
 
 function CubeSphere.getDistortionFactor()

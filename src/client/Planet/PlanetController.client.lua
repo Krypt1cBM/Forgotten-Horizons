@@ -20,19 +20,16 @@ CameraCollision.initialize()
 --Generation
 ChunkManager.initialize()
 
-PlayerTracker.rootPart.Anchored = true
 PlayerTracker.humanoid:ChangeState(Enum.HumanoidStateType.Physics)
 
 rs.RenderStepped:Connect(function(dt)
 	CameraController.update(dt)
 end)
 
-PlayerTracker.rootPart.Anchored = false
-
 rs.Heartbeat:Connect(function(dt)
 	PlayerTracker.update(dt)
 
 	GravityController.update(dt)
 	MovementController.update(dt)
-	ChunkManager.update(dt)
+	--ChunkManager.update(PlayerTracker)
 end)

@@ -50,4 +50,8 @@ function Chunk:recycle(face, chunkX, chunkY)
 	self:generate(face, chunkX, chunkY)
 end
 
+function Chunk:getLocation()
+	return self.location
+end
+
 return Chunk

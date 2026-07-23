@@ -2,19 +2,28 @@ local Constants = require(script.Parent.Parent.Constants)
 
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
+local CubeSphere = require(script.Parent.Parent.CubeSphere)
 
 local ChunkManager = {}
 
 local physicalChunks = {}
 
-local faceChunkCount = nil
-local chunkSize = nil
-
 local currentFace = nil
 local currentChunkX = nil
 local currentChunkY = nil
+local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
 
 local planetContext
+
+local function locationsMatch(a, b)
+	return a.face == b.face and a.chunkX == b.chunkX and a.chunkY == b.chunkY
+end
+
+function ChunkManager.setCenterLocation(location)
+	currentFace = location.face
+	currentChunkX = location.chunkX
+	currentChunkY = location.chunkY
+end
 
 function ChunkManager.initialize()
 	local PlanetContext = require(script.Parent.PlanetContext)
@@ -23,7 +32,7 @@ function ChunkManager.initialize()
 		radius = Constants.Planet.RADIUS,
 		resolution = Constants.Planet.RESOLUTION,
 		center = Constants.Planet.CENTER,
-		maxHeight = 0,
+		maxHeight = 200,
 	})
 
 	local currentLocation = {
@@ -32,22 +41,41 @@ function ChunkManager.initialize()
 		chunkY = math.floor(planetContext.faceChunkCount / 2),
 	}
 
-	local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
+	ChunkManager.setCenterLocation(currentLocation)
 
 	local plan = StreamPlanner.getPlan(currentLocation, currentHiddenCorner)
 
-	for _, location in ipairs(plan) do
+	local location = plan[1]
+	local chunk = Chunk.new()
+	chunk:generate(planetContext, location)
+
+	table.insert(physicalChunks, chunk)
+	--[[for _, location in ipairs(plan) do
 		local chunk = Chunk.new()
 
 		chunk:generate(planetContext, location)
 
 		table.insert(physicalChunks, chunk)
-	end
+	end]]
+	--
 end
 
-function ChunkManager.update()
-	--local plan = StreamPlanner.getPlan()
-	--TODO compare loaded chunks
+function ChunkManager.update(playerTracker)
+	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, currentFace, playerTracker.position)
+
+	if chunkX ~= currentChunkX or chunkY ~= currentChunkY then
+		currentChunkX = chunkX
+		currentChunkY = chunkY
+
+		local location = {
+			face = currentFace,
+			chunkX = currentChunkX,
+			chunkY = currentChunkY,
+		}
+		physicalChunks[1].meshPart.Transparency = 0.5
+
+		local plan = StreamPlanner.getPlan(location, currentHiddenCorner)
+	end
 end
 
 return ChunkManager
