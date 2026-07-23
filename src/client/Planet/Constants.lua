@@ -5,7 +5,6 @@ Constants.Planet = { --most of these will come from seed or another source
 	RADIUS = 5000,
 	RESOLUTION = 32,
 	CENTER = Vector3.zero,
-	ChunksPerFace = 16,
 }
 
 Constants.GRAVITY_ACCELERATION = 500
@@ -27,7 +26,7 @@ Constants.Camera = {
 	SENSITIVITY = 0.003,
 
 	MIN_DISTANCE = 5,
-	MAX_DISTANCE = 30,
+	MAX_DISTANCE = 1000, -- 30,
 
 	MIN_PITCH = math.rad(-70),
 	MAX_PITCH = math.rad(70),

@@ -14,7 +14,7 @@ local cornerOffsets = {
 	[StreamPlanner.HiddenCorner.SE] = Vector2.new(1, -1),
 }
 
-function StreamPlanner.getPlan(face, centerChunkX, centerChunkY, hiddenCorner)
+function StreamPlanner.getPlan(location, hiddenCorner)
 	local plan = {}
 	local hidden = cornerOffsets[hiddenCorner]
 
@@ -25,9 +25,9 @@ function StreamPlanner.getPlan(face, centerChunkX, centerChunkY, hiddenCorner)
 			end
 
 			table.insert(plan, {
-				face = face,
-				chunkX = centerChunkX + offsetX,
-				chunkY = centerChunkY + offsetY,
+				face = location.face,
+				chunkX = location.chunkX + offsetX,
+				chunkY = location.chunkY + offsetY,
 			})
 		end
 	end

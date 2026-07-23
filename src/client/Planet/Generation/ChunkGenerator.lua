@@ -1,37 +1,38 @@
-local Constants = require(script.Parent.Parent.Constants)
 local CubeSphere = require(script.Parent.Parent.CubeSphere)
 
 local ChunkGenerator = {}
 
-function ChunkGenerator.generate(editableMesh, faceName, chunkX, chunkY)
+function ChunkGenerator.generate(editableMesh, context, location, chunkFrame)
 	local vertices = {}
 
-	local uMin, uMax, vMin, vMax = CubeSphere.getChunkBounds(chunkX, chunkY)
+	local uMin, uMax, vMin, vMax = CubeSphere.getChunkBounds(context, location.chunkX, location.chunkY)
 
-	for y = 0, Constants.Planet.RESOLUTION do
+	for y = 0, context.resolution do
 		vertices[y] = {}
 
-		for x = 0, Constants.Planet.RESOLUTION do
-			local alphaX = x / Constants.Planet.RESOLUTION
-			local alphaY = y / Constants.Planet.RESOLUTION
+		for x = 0, context.resolution do
+			local alphaX = x / context.resolution
+			local alphaY = y / context.resolution
 
 			local u = uMin + alphaX * (uMax - uMin)
 			local v = vMin + alphaY * (vMax - vMin)
 
-			local cubePoint = CubeSphere.getCubePoint(faceName, u, v)
+			local cubePoint = CubeSphere.getCubePoint(location.face, u, v)
 			local normal = CubeSphere.cubeToSphere(cubePoint)
 
 			local height = 0
 
-			local spherePoint = Constants.Planet.CENTER + normal * (Constants.Planet.RADIUS + height)
+			local spherePoint = context.center + normal * (context.baseRadius + height)
 
-			local vertexId = editableMesh:AddVertex(spherePoint)
+			local localPoint = chunkFrame:PointToObjectSpace(spherePoint)
+
+			local vertexId = editableMesh:AddVertex(localPoint)
 			vertices[y][x] = vertexId
 		end
 	end
 
-	for y = 0, Constants.Planet.RESOLUTION - 1 do
-		for x = 0, Constants.Planet.RESOLUTION - 1 do
+	for y = 0, context.resolution - 1 do
+		for x = 0, context.resolution - 1 do
 			local a = vertices[y][x]
 			local b = vertices[y][x + 1]
 			local c = vertices[y + 1][x]

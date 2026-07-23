@@ -1,6 +1,7 @@
 local AssetService = game:GetService("AssetService")
 
 local ChunkGenerator = require(script.Parent.ChunkGenerator)
+local CubeSphere = require(script.Parent.Parent.CubeSphere)
 
 local Chunk = {}
 Chunk.__index = Chunk
@@ -17,14 +18,16 @@ function Chunk.new()
 	return self
 end
 
-function Chunk:buildMesh()
+function Chunk:buildMesh(context)
 	local editableMesh = AssetService:CreateEditableMesh()
 
-	ChunkGenerator.generate(editableMesh, self.face, self.chunkX, self.chunkY)
+	ChunkGenerator.generate(editableMesh, context, self.location, self.chunkFrame)
 
 	local meshPart = AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
 		CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
 	})
+
+	meshPart.CFrame = self.chunkFrame
 
 	meshPart.Anchored = true
 	meshPart.Parent = workspace
@@ -32,16 +35,15 @@ function Chunk:buildMesh()
 	return meshPart
 end
 
-function Chunk:generate(face, chunkX, chunkY)
-	self.face = face
-	self.chunkX = chunkX
-	self.chunkY = chunkY
+function Chunk:generate(context, location)
+	self.location = location
+	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
 
 	if self.meshPart then
 		self.meshPart:Destroy()
 	end
 
-	self.meshPart = self:buildMesh()
+	self.meshPart = self:buildMesh(context)
 end
 
 function Chunk:recycle(face, chunkX, chunkY)

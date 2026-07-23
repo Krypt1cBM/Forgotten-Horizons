@@ -1,19 +1,47 @@
+local Constants = require(script.Parent.Parent.Constants)
+
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
 
 local ChunkManager = {}
 
-local loadedChunks = {}
+local physicalChunks = {}
+
+local faceChunkCount = nil
+local chunkSize = nil
+
+local currentFace = nil
+local currentChunkX = nil
+local currentChunkY = nil
+
+local planetContext
 
 function ChunkManager.initialize()
-	local plan = StreamPlanner.getPlan("+Y", 5, 5, StreamPlanner.HiddenCorner.SE)
+	local PlanetContext = require(script.Parent.PlanetContext)
 
-	for _, data in ipairs(plan) do
-		local chunkObject = Chunk.new()
+	planetContext = PlanetContext.new({
+		radius = Constants.Planet.RADIUS,
+		resolution = Constants.Planet.RESOLUTION,
+		center = Constants.Planet.CENTER,
+		maxHeight = 0,
+	})
 
-		chunkObject:generate(data.face, data.chunkX, data.chunkY)
+	local currentLocation = {
+		face = "+Y",
+		chunkX = math.floor(planetContext.faceChunkCount / 2),
+		chunkY = math.floor(planetContext.faceChunkCount / 2),
+	}
 
-		table.insert(loadedChunks, chunkObject)
+	local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
+
+	local plan = StreamPlanner.getPlan(currentLocation, currentHiddenCorner)
+
+	for _, location in ipairs(plan) do
+		local chunk = Chunk.new()
+
+		chunk:generate(planetContext, location)
+
+		table.insert(physicalChunks, chunk)
 	end
 end
 
