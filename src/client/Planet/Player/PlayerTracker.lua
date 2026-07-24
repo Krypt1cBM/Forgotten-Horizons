@@ -23,6 +23,8 @@ local function setCharacter(character)
 	PlayerTracker.character = character
 	PlayerTracker.humanoid = character:WaitForChild("Humanoid")
 	PlayerTracker.rootPart = character:WaitForChild("HumanoidRootPart")
+
+	PlayerTracker.position = PlayerTracker.rootPart.Position
 end
 
 function PlayerTracker.initialize()

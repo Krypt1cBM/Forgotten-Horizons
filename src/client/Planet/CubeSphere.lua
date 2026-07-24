@@ -78,8 +78,8 @@ function CubeSphere.getChunkFromPosition(context, face, position)
 	local normalizedX = (u + 1) * 0.5
 	local normalizedY = (v + 1) * 0.5
 
-	local chunkX = math.floor(normalizedX * context.faceChunkCount)
-	local chunkY = math.floor(normalizedY * context.faceChunkCount)
+	local chunkX = math.clamp(math.floor(normalizedX * context.faceChunkCount), 0, context.faceChunkCount - 1)
+	local chunkY = math.clamp(math.floor(normalizedY * context.faceChunkCount), 0, context.faceChunkCount - 1)
 
 	return chunkX, chunkY
 end

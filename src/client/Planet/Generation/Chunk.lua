@@ -9,6 +9,7 @@ Chunk.__index = Chunk
 function Chunk.new()
 	local self = setmetatable({}, Chunk)
 
+	self.location = nil
 	self.face = nil
 	self.chunkX = nil
 	self.chunkY = nil
@@ -53,8 +54,8 @@ function Chunk:generate(context, location)
 	self.meshPart = self:buildMesh(context)
 end
 
-function Chunk:recycle(face, chunkX, chunkY)
-	self:generate(face, chunkX, chunkY)
+function Chunk:recycle(context, location)
+	self:generate(context, location)
 end
 
 function Chunk:getLocation()
