@@ -18,7 +18,6 @@ function ChunkGenerator.generate(editableMesh, context, location, chunkFrame)
 			local v = vMin + alphaY * (vMax - vMin)
 
 			local cubePoint = CubeSphere.getCubePoint(location.face, u, v)
-			local normal = CubeSphere.cubeToSphere(cubePoint)
 
 			local direction = CubeSphere.cubeToSphere(cubePoint).Unit
 

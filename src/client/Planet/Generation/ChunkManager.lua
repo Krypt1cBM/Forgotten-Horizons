@@ -62,7 +62,13 @@ function ChunkManager.initialize()
 end
 
 function ChunkManager.update(playerTracker)
-	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, currentFace, playerTracker.position)
+	local position = playerTracker.position
+
+	if playerTracker.isGrounded and playerTracker.groundResult then
+		position = playerTracker.groundResult.Position
+	end
+
+	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, currentFace, position)
 
 	if chunkX ~= currentChunkX or chunkY ~= currentChunkY then
 		warn(
@@ -84,7 +90,6 @@ function ChunkManager.update(playerTracker)
 			chunkX = currentChunkX,
 			chunkY = currentChunkY,
 		}
-		physicalChunks[1].meshPart.Transparency = 0.5
 
 		local plan = StreamPlanner.getPlan(location, currentHiddenCorner)
 	end
