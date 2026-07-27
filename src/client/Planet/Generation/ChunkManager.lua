@@ -7,8 +7,7 @@ local PlayerTracker = require(script.Parent.Parent.Player.PlayerTracker)
 
 local ChunkManager = {}
 
-local physicalChunks = {}
-local loadedLocations = {}
+local loadedChunks = {}
 
 local currentFace = nil
 local currentChunkX = nil
@@ -23,6 +22,10 @@ end
 
 local function shouldShiftChunk()
 	return false
+end
+
+local function locationKey(location)
+	return location.face .. ":" .. location.chunkX .. ":" .. location.chunkY
 end
 
 function ChunkManager.setCenterLocation(location)
@@ -56,8 +59,7 @@ function ChunkManager.initialize()
 
 		chunk:generate(planetContext, location)
 
-		table.insert(physicalChunks, chunk)
-		table.insert(loadedLocations, location)
+		loadedChunks[locationKey(location)] = chunk
 	end
 end
 
@@ -92,6 +94,40 @@ function ChunkManager.update(playerTracker)
 		}
 
 		local plan = StreamPlanner.getPlan(location, currentHiddenCorner)
+
+		local desiredLocations = {}
+		for _, desiredLocation in ipairs(plan) do
+			desiredLocations[locationKey(desiredLocation)] = desiredLocation
+		end
+
+		local missingLocations = {}
+
+		for key, desiredLocation in pairs(desiredLocations) do
+			if not loadedChunks[key] then
+				table.insert(missingLocations, desiredLocation)
+			end
+		end
+
+		local freeChunks = {}
+
+		for key, chunk in pairs(loadedChunks) do
+			if not desiredLocations[key] then
+				table.insert(freeChunks, {
+					key = key,
+					chunk = chunk,
+				})
+			end
+		end
+
+		assert(#missingLocations == #freeChunks, "Streaming mismatch: missing locations do not match free chunks")
+
+		for i, missingLocation in ipairs(missingLocations) do
+			local freeChunk = freeChunks[i]
+
+			loadedChunks[freeChunk.key] = nil
+			freeChunk.chunk:recycle(planetContext, missingLocation)
+			loadedChunks[locationKey(missingLocation)] = freeChunk.chunk
+		end
 	end
 end
 

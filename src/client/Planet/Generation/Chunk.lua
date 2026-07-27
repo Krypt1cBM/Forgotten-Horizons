@@ -15,22 +15,27 @@ function Chunk.new()
 	self.chunkY = nil
 
 	self.meshPart = nil
+	self.editableMesh = nil
 
 	return self
 end
 
 function Chunk:buildMesh(context)
-	local editableMesh = AssetService:CreateEditableMesh()
+	--local editableMesh = AssetService:CreateEditableMesh()
+	local success1, editableMesh = pcall(function()
+		return AssetService:CreateEditableMesh()
+	end)
+	assert(success1 and editableMesh, "Failed to create EditableMesh during chunk recycle")
 
 	ChunkGenerator.generate(editableMesh, context, self.location, self.chunkFrame)
 
-	local success, result = pcall(function()
+	local success2, result = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
 			CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
 		})
 	end)
 
-	if not success then
+	if not success2 then
 		error(result)
 	end
 	local meshPart = result
@@ -40,7 +45,7 @@ function Chunk:buildMesh(context)
 	meshPart.Anchored = true
 	meshPart.Parent = workspace
 
-	return meshPart
+	return meshPart, editableMesh
 end
 
 function Chunk:generate(context, location)
@@ -49,9 +54,14 @@ function Chunk:generate(context, location)
 
 	if self.meshPart then
 		self.meshPart:Destroy()
+		self.meshPart = nil
+	end
+	if self.editableMesh then
+		self.editableMesh:Destroy()
+		self.editableMesh = nil
 	end
 
-	self.meshPart = self:buildMesh(context)
+	self.meshPart, self.editableMesh = self:buildMesh(context)
 end
 
 function Chunk:recycle(context, location)
