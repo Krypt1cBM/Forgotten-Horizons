@@ -3,7 +3,6 @@ local Constants = require(script.Parent.Parent.Constants)
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
 local CubeSphere = require(script.Parent.Parent.CubeSphere)
-local PlayerTracker = require(script.Parent.Parent.Player.PlayerTracker)
 
 local ChunkManager = {}
 
@@ -14,18 +13,79 @@ local currentChunkX = nil
 local currentChunkY = nil
 local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
 
+local pendingCenterLocation = nil
+local pendingDesiredLocations = nil
+local playerChunkX = nil
+local playerChunkY = nil
+
 local planetContext
 
-local function locationsMatch(a, b)
-	return a.face == b.face and a.chunkX == b.chunkX and a.chunkY == b.chunkY
-end
+local function reconcileChunks(centerLocation, desiredLocations)
+	local missingLocations = {}
+	local freeChunks = {}
 
-local function shouldShiftChunk()
-	return false
-end
+	for key, desiredLocation in pairs(desiredLocations) do
+		if not loadedChunks[key] then
+			table.insert(missingLocations, desiredLocation)
+		end
+	end
 
-local function locationKey(location)
-	return location.face .. ":" .. location.chunkX .. ":" .. location.chunkY
+	for key, chunk in pairs(loadedChunks) do
+		if not desiredLocations[key] then
+			table.insert(freeChunks, {
+				key = key,
+				chunk = chunk,
+			})
+		end
+	end
+
+	table.sort(missingLocations, function(a, b)
+		return StreamPlanner.getLocationKey(a) < StreamPlanner.getLocationKey(b)
+	end)
+
+	table.sort(freeChunks, function(a, b)
+		return a.key < b.key
+	end)
+
+	if #missingLocations ~= #freeChunks then
+		warn("Streaming mismatch:", "Missing:", #missingLocations, "Free:", #freeChunks)
+
+		for _, location in ipairs(missingLocations) do
+			warn("Missing:", StreamPlanner.getLocationKey(location))
+		end
+
+		for _, freeChunk in ipairs(freeChunks) do
+			warn("Free:", freeChunk.key)
+		end
+
+		return false
+	end
+
+	if #missingLocations == 0 then
+		return true
+	end
+
+	if pendingCenterLocation ~= centerLocation then
+		return false
+	end
+
+	local missingLocation = missingLocations[1]
+	local freeChunk = freeChunks[1]
+
+	freeChunk.chunk:recycle(planetContext, missingLocation)
+
+	loadedChunks[freeChunk.key] = nil
+	loadedChunks[StreamPlanner.getLocationKey(missingLocation)] = freeChunk.chunk
+
+	local remainingMissing = 0
+
+	for key in pairs(desiredLocations) do
+		if not loadedChunks[key] then
+			remainingMissing += 1
+		end
+	end
+
+	return remainingMissing == 0
 end
 
 function ChunkManager.setCenterLocation(location)
@@ -52,14 +112,14 @@ function ChunkManager.initialize()
 
 	ChunkManager.setCenterLocation(currentLocation)
 
-	local plan = StreamPlanner.getPlan(currentLocation, currentHiddenCorner)
+	local desiredLocations = StreamPlanner.getDesiredLocations(planetContext, currentLocation, currentHiddenCorner)
 
-	for _, location in ipairs(plan) do
+	for _, location in pairs(desiredLocations) do
 		local chunk = Chunk.new()
 
 		chunk:generate(planetContext, location)
 
-		loadedChunks[locationKey(location)] = chunk
+		loadedChunks[StreamPlanner.getLocationKey(location)] = chunk
 	end
 end
 
@@ -72,7 +132,7 @@ function ChunkManager.update(playerTracker)
 
 	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, currentFace, position)
 
-	if chunkX ~= currentChunkX or chunkY ~= currentChunkY then
+	if chunkX ~= playerChunkX or chunkY ~= playerChunkY then
 		warn(
 			"Chunk changed:",
 			chunkX,
@@ -84,49 +144,27 @@ function ChunkManager.update(playerTracker)
 			playerTracker.position
 		)
 
-		currentChunkX = chunkX
-		currentChunkY = chunkY
+		playerChunkX = chunkX
+		playerChunkY = chunkY
 
-		local location = {
+		pendingCenterLocation = {
 			face = currentFace,
-			chunkX = currentChunkX,
-			chunkY = currentChunkY,
+			chunkX = chunkX,
+			chunkY = chunkY,
 		}
 
-		local plan = StreamPlanner.getPlan(location, currentHiddenCorner)
+		pendingDesiredLocations =
+			StreamPlanner.getDesiredLocations(planetContext, pendingCenterLocation, currentHiddenCorner)
+	end
 
-		local desiredLocations = {}
-		for _, desiredLocation in ipairs(plan) do
-			desiredLocations[locationKey(desiredLocation)] = desiredLocation
-		end
+	if pendingDesiredLocations then
+		local complete = reconcileChunks(pendingCenterLocation, pendingDesiredLocations)
 
-		local missingLocations = {}
+		if complete then
+			ChunkManager.setCenterLocation(pendingCenterLocation)
 
-		for key, desiredLocation in pairs(desiredLocations) do
-			if not loadedChunks[key] then
-				table.insert(missingLocations, desiredLocation)
-			end
-		end
-
-		local freeChunks = {}
-
-		for key, chunk in pairs(loadedChunks) do
-			if not desiredLocations[key] then
-				table.insert(freeChunks, {
-					key = key,
-					chunk = chunk,
-				})
-			end
-		end
-
-		assert(#missingLocations == #freeChunks, "Streaming mismatch: missing locations do not match free chunks")
-
-		for i, missingLocation in ipairs(missingLocations) do
-			local freeChunk = freeChunks[i]
-
-			loadedChunks[freeChunk.key] = nil
-			freeChunk.chunk:recycle(planetContext, missingLocation)
-			loadedChunks[locationKey(missingLocation)] = freeChunk.chunk
+			pendingCenterLocation = nil
+			pendingDesiredLocations = nil
 		end
 	end
 end

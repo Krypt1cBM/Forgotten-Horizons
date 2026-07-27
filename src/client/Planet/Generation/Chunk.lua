@@ -21,7 +21,6 @@ function Chunk.new()
 end
 
 function Chunk:buildMesh(context)
-	--local editableMesh = AssetService:CreateEditableMesh()
 	local success1, editableMesh = pcall(function()
 		return AssetService:CreateEditableMesh()
 	end)
@@ -48,24 +47,42 @@ function Chunk:buildMesh(context)
 	return meshPart, editableMesh
 end
 
-function Chunk:generate(context, location)
-	self.location = location
-	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
-
+function Chunk:clearMesh()
 	if self.meshPart then
 		self.meshPart:Destroy()
 		self.meshPart = nil
 	end
+
 	if self.editableMesh then
 		self.editableMesh:Destroy()
 		self.editableMesh = nil
 	end
+end
+
+function Chunk:generate(context, location)
+	self.location = location
+	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
+
+	self:clearMesh()
 
 	self.meshPart, self.editableMesh = self:buildMesh(context)
 end
 
 function Chunk:recycle(context, location)
-	self:generate(context, location)
+	self.location = location
+	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
+
+	local faces = self.editableMesh:GetFaces()
+
+	for _, faceId in ipairs(faces) do
+		self.editableMesh:RemoveFace(faceId)
+	end
+
+	self.editableMesh:RemoveUnused()
+
+	ChunkGenerator.generate(self.editableMesh, context, location, self.chunkFrame)
+
+	self.meshPart.CFrame = self.chunkFrame
 end
 
 function Chunk:getLocation()

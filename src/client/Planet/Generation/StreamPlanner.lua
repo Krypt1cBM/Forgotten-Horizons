@@ -14,8 +14,31 @@ local cornerOffsets = {
 	[StreamPlanner.HiddenCorner.SE] = Vector2.new(1, -1),
 }
 
-function StreamPlanner.getPlan(location, hiddenCorner)
-	local plan = {}
+function StreamPlanner.getLocationKey(location)
+	return location.face .. ":" .. location.chunkX .. ":" .. location.chunkY
+end
+
+local function isValidLocation(context, location)
+	return location.chunkX >= 0
+		and location.chunkX < context.faceChunkCount
+		and location.chunkY >= 0
+		and location.chunkY < context.faceChunkCount
+end
+
+local function addLocation(set, context, face, chunkX, chunkY)
+	local location = {
+		face = face,
+		chunkX = chunkX,
+		chunkY = chunkY,
+	}
+
+	if isValidLocation(context, location) then
+		set[StreamPlanner.getLocationKey(location)] = location
+	end
+end
+
+function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner)
+	local desiredLocations = {}
 	local hidden = cornerOffsets[hiddenCorner]
 
 	for offsetY = -1, 1 do
@@ -24,15 +47,17 @@ function StreamPlanner.getPlan(location, hiddenCorner)
 				continue
 			end
 
-			table.insert(plan, {
-				face = location.face,
-				chunkX = location.chunkX + offsetX,
-				chunkY = location.chunkY + offsetY,
-			})
+			addLocation(
+				desiredLocations,
+				context,
+				centerLocation.face,
+				centerLocation.chunkX + offsetX,
+				centerLocation.chunkY + offsetY
+			)
 		end
 	end
 
-	return plan
+	return desiredLocations
 end
 
 return StreamPlanner
