@@ -16,6 +16,7 @@ function Chunk.new()
 
 	self.meshPart = nil
 	self.editableMesh = nil
+	self.vertices = nil
 
 	return self
 end
@@ -26,7 +27,8 @@ function Chunk:buildMesh(context)
 	end)
 	assert(success1 and editableMesh, "Failed to create EditableMesh during chunk recycle")
 
-	ChunkGenerator.generate(editableMesh, context, self.location, self.chunkFrame)
+	self.vertices = ChunkGenerator.createTopology(editableMesh, context)
+	ChunkGenerator.updatePositions(editableMesh, context, self.location, self.chunkFrame, self.vertices)
 
 	local success2, result = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
@@ -74,15 +76,7 @@ function Chunk:recycle(context, location)
 	self.location = location
 	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
 
-	local faces = self.editableMesh:GetFaces()
-
-	for _, faceId in ipairs(faces) do
-		self.editableMesh:RemoveFace(faceId)
-	end
-
-	self.editableMesh:RemoveUnused()
-
-	ChunkGenerator.generate(self.editableMesh, context, location, self.chunkFrame)
+	ChunkGenerator.updatePositions(self.editableMesh, context, self.location, self.chunkFrame, self.vertices)
 
 	local success, updatedMeshPart = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh), {
@@ -92,11 +86,12 @@ function Chunk:recycle(context, location)
 
 	assert(success and updatedMeshPart, "Failed to create updated MeshPart during chunk recycle")
 
-	updatedMeshPart.Name = "TEST_UPDATED_MESH"
-	updatedMeshPart.CFrame = self.chunkFrame
-	updatedMeshPart.Parent = workspace
-
+	self.meshPart:ApplyMesh(updatedMeshPart)
+	self.meshPart.Size = self.meshPart.MeshSize
 	self.meshPart.CFrame = self.chunkFrame
+	self.meshPart.Name = self.location.face .. ":" .. self.location.chunkX .. ":" .. self.location.chunkY
+
+	updatedMeshPart:Destroy()
 end
 
 function Chunk:getLocation()
