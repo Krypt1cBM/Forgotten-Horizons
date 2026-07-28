@@ -21,17 +21,17 @@ local playerChunkY = nil
 local planetContext
 
 local function reconcileChunks(centerLocation, desiredLocations)
-	local missingLocations = {}
+	local commonChunks = {}
 	local freeChunks = {}
-
-	for key, desiredLocation in pairs(desiredLocations) do
-		if not loadedChunks[key] then
-			table.insert(missingLocations, desiredLocation)
-		end
-	end
+	local missingLocations = {}
 
 	for key, chunk in pairs(loadedChunks) do
-		if not desiredLocations[key] then
+		if desiredLocations[key] then
+			table.insert(commonChunks, {
+				key = key,
+				chunk = chunk,
+			})
+		else
 			table.insert(freeChunks, {
 				key = key,
 				chunk = chunk,
@@ -39,24 +39,22 @@ local function reconcileChunks(centerLocation, desiredLocations)
 		end
 	end
 
-	table.sort(missingLocations, function(a, b)
-		return StreamPlanner.getLocationKey(a) < StreamPlanner.getLocationKey(b)
-	end)
+	for key, location in pairs(desiredLocations) do
+		if not loadedChunks[key] then
+			table.insert(missingLocations, location)
+		end
+	end
 
 	table.sort(freeChunks, function(a, b)
 		return a.key < b.key
 	end)
 
-	if #missingLocations ~= #freeChunks then
-		warn("Streaming mismatch:", "Missing:", #missingLocations, "Free:", #freeChunks)
+	table.sort(missingLocations, function(a, b)
+		return StreamPlanner.getLocationKey(a) < StreamPlanner.getLocationKey(b)
+	end)
 
-		for _, location in ipairs(missingLocations) do
-			warn("Missing:", StreamPlanner.getLocationKey(location))
-		end
-
-		for _, freeChunk in ipairs(freeChunks) do
-			warn("Free:", freeChunk.key)
-		end
+	if #freeChunks ~= #missingLocations then
+		warn("Streaming mismatch:", "Common:", #commonChunks, "Free:", #freeChunks, "Missing:", #missingLocations)
 
 		return false
 	end
@@ -69,23 +67,18 @@ local function reconcileChunks(centerLocation, desiredLocations)
 		return false
 	end
 
-	local missingLocation = missingLocations[1]
 	local freeChunk = freeChunks[1]
+	local missingLocation = missingLocations[1]
+
+	local oldKey = freeChunk.key
+	local newKey = StreamPlanner.getLocationKey(missingLocation)
 
 	freeChunk.chunk:recycle(planetContext, missingLocation)
 
-	loadedChunks[freeChunk.key] = nil
-	loadedChunks[StreamPlanner.getLocationKey(missingLocation)] = freeChunk.chunk
+	loadedChunks[oldKey] = nil
+	loadedChunks[newKey] = freeChunk.chunk
 
-	local remainingMissing = 0
-
-	for key in pairs(desiredLocations) do
-		if not loadedChunks[key] then
-			remainingMissing += 1
-		end
-	end
-
-	return remainingMissing == 0
+	return false
 end
 
 function ChunkManager.setCenterLocation(location)

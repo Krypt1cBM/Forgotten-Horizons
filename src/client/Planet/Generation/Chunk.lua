@@ -66,6 +66,8 @@ function Chunk:generate(context, location)
 	self:clearMesh()
 
 	self.meshPart, self.editableMesh = self:buildMesh(context)
+
+	self.meshPart.Name = self.location.face .. ":" .. self.location.chunkX .. ":" .. self.location.chunkY
 end
 
 function Chunk:recycle(context, location)
@@ -81,6 +83,18 @@ function Chunk:recycle(context, location)
 	self.editableMesh:RemoveUnused()
 
 	ChunkGenerator.generate(self.editableMesh, context, location, self.chunkFrame)
+
+	local success, updatedMeshPart = pcall(function()
+		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh), {
+			CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
+		})
+	end)
+
+	assert(success and updatedMeshPart, "Failed to create updated MeshPart during chunk recycle")
+
+	updatedMeshPart.Name = "TEST_UPDATED_MESH"
+	updatedMeshPart.CFrame = self.chunkFrame
+	updatedMeshPart.Parent = workspace
 
 	self.meshPart.CFrame = self.chunkFrame
 end
