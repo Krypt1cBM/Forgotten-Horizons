@@ -79,9 +79,7 @@ function Chunk:recycle(context, location)
 	ChunkGenerator.updatePositions(self.editableMesh, context, self.location, self.chunkFrame, self.vertices)
 
 	local success, updatedMeshPart = pcall(function()
-		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh), {
-			CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
-		})
+		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh))
 	end)
 
 	assert(success and updatedMeshPart, "Failed to create updated MeshPart during chunk recycle")
