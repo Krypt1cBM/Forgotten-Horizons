@@ -128,21 +128,17 @@ function ChunkManager.update(playerTracker)
 
 	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, newFace, position)
 
-	if newFace ~= currentFace or chunkX ~= playerChunkX or chunkY ~= playerChunkY then
-		warn(
-			"Chunk changed:",
-			chunkX,
-			chunkY,
-			"Face:",
-			newFace,
-			"Current:",
-			currentFace,
-			"Position:",
-			playerTracker.position
-		)
+	local newHiddenCorner = StreamPlanner.getHiddenCorner(planetContext, newFace, chunkX, chunkY, position)
 
+	if
+		newFace ~= currentFace
+		or chunkX ~= playerChunkX
+		or chunkY ~= playerChunkY
+		or newHiddenCorner ~= currentHiddenCorner
+	then
 		playerChunkX = chunkX
 		playerChunkY = chunkY
+		currentHiddenCorner = newHiddenCorner
 
 		pendingCenterLocation = {
 			face = newFace,

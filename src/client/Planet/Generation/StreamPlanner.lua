@@ -1,4 +1,5 @@
 local CubeTopology = require(script.Parent.CubeTopology)
+local CubeSphere = require(script.Parent.Parent.CubeSphere)
 
 local StreamPlanner = {}
 
@@ -73,6 +74,40 @@ function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner
 	end
 
 	return desiredLocations
+end
+
+function StreamPlanner.getHiddenCorner(context, face, chunkX, chunkY, position)
+	local direction = (position - context.center).Unit
+	local cubePoint = CubeSphere.sphereToCube(face, direction)
+
+	local chunkSize = 2 / context.faceChunkCount
+
+	local uMin = -1 + chunkX * chunkSize
+	local vMin = -1 + chunkY * chunkSize
+
+	local localU = (cubePoint.X - uMin) / chunkSize
+	local localV = (cubePoint.Y - vMin) / chunkSize
+
+	local isRight = localU >= 0.5
+	local isTop = localV >= 0.5
+
+	local hiddenCorner
+
+	if isTop then
+		if isRight then
+			hiddenCorner = StreamPlanner.HiddenCorner.SW
+		else
+			hiddenCorner = StreamPlanner.HiddenCorner.SE
+		end
+	else
+		if isRight then
+			hiddenCorner = StreamPlanner.HiddenCorner.NW
+		else
+			hiddenCorner = StreamPlanner.HiddenCorner.NE
+		end
+	end
+
+	return hiddenCorner
 end
 
 return StreamPlanner
