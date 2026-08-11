@@ -1,3 +1,5 @@
+local CubeTopology = require(script.Parent.CubeTopology)
+
 local StreamPlanner = {}
 
 StreamPlanner.HiddenCorner = {
@@ -18,13 +20,6 @@ function StreamPlanner.getLocationKey(location)
 	return location.face .. ":" .. location.chunkX .. ":" .. location.chunkY
 end
 
-local function isValidLocation(context, location)
-	return location.chunkX >= 0
-		and location.chunkX < context.faceChunkCount
-		and location.chunkY >= 0
-		and location.chunkY < context.faceChunkCount
-end
-
 local function addLocation(set, context, face, chunkX, chunkY)
 	local location = {
 		face = face,
@@ -32,21 +27,21 @@ local function addLocation(set, context, face, chunkX, chunkY)
 		chunkY = chunkY,
 	}
 
-	if isValidLocation(context, location) then
-		set[StreamPlanner.getLocationKey(location)] = location
+	local wrapped = CubeTopology.wrapLocation(context, location)
+	local key = StreamPlanner.getLocationKey(wrapped)
+
+	if set[key] then
+		return
 	end
+
+	set[key] = wrapped
 end
 
 function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner)
 	local desiredLocations = {}
-	local hidden = cornerOffsets[hiddenCorner]
 
 	for offsetY = -1, 1 do
 		for offsetX = -1, 1 do
-			if offsetX == hidden.X and offsetY == hidden.Y then
-				continue
-			end
-
 			addLocation(
 				desiredLocations,
 				context,
@@ -55,6 +50,26 @@ function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner
 				centerLocation.chunkY + offsetY
 			)
 		end
+	end
+
+	local count = 0
+
+	for _ in pairs(desiredLocations) do
+		count += 1
+	end
+
+	if count == 9 then
+		local hidden = cornerOffsets[hiddenCorner]
+
+		local hiddenLocation = {
+			face = centerLocation.face,
+			chunkX = centerLocation.chunkX + hidden.X,
+			chunkY = centerLocation.chunkY + hidden.Y,
+		}
+
+		local wrappedHidden = CubeTopology.wrapLocation(context, hiddenLocation)
+
+		desiredLocations[StreamPlanner.getLocationKey(wrappedHidden)] = nil
 	end
 
 	return desiredLocations

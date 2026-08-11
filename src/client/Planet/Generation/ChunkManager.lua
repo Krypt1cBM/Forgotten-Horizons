@@ -3,14 +3,13 @@ local Constants = require(script.Parent.Parent.Constants)
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
 local CubeSphere = require(script.Parent.Parent.CubeSphere)
+local CubeTopology = require(script.Parent.CubeTopology)
 
 local ChunkManager = {}
 
 local loadedChunks = {}
 
 local currentFace = nil
-local currentChunkX = nil
-local currentChunkY = nil
 local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
 
 local pendingCenterLocation = nil
@@ -19,6 +18,10 @@ local playerChunkX = nil
 local playerChunkY = nil
 
 local planetContext
+
+local function locationsEqual(a, b)
+	return a and b and a.face == b.face and a.chunkX == b.chunkX and a.chunkY == b.chunkY
+end
 
 local function reconcileChunks(centerLocation, desiredLocations)
 	local commonChunks = {}
@@ -63,7 +66,7 @@ local function reconcileChunks(centerLocation, desiredLocations)
 		return true
 	end
 
-	if pendingCenterLocation ~= centerLocation then
+	if not locationsEqual(pendingCenterLocation, centerLocation) then
 		return false
 	end
 
@@ -83,8 +86,6 @@ end
 
 function ChunkManager.setCenterLocation(location)
 	currentFace = location.face
-	currentChunkX = location.chunkX
-	currentChunkY = location.chunkY
 end
 
 function ChunkManager.initialize()
@@ -123,16 +124,19 @@ function ChunkManager.update(playerTracker)
 		position = playerTracker.groundResult.Position
 	end
 
-	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, currentFace, position)
+	local newFace = CubeTopology.getFaceFromPosition(planetContext, position)
 
-	if chunkX ~= playerChunkX or chunkY ~= playerChunkY then
+	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, newFace, position)
+
+	if newFace ~= currentFace or chunkX ~= playerChunkX or chunkY ~= playerChunkY then
 		warn(
 			"Chunk changed:",
 			chunkX,
 			chunkY,
+			"Face:",
+			newFace,
 			"Current:",
-			currentChunkX,
-			currentChunkY,
+			currentFace,
 			"Position:",
 			playerTracker.position
 		)
@@ -141,7 +145,7 @@ function ChunkManager.update(playerTracker)
 		playerChunkY = chunkY
 
 		pendingCenterLocation = {
-			face = currentFace,
+			face = newFace,
 			chunkX = chunkX,
 			chunkY = chunkY,
 		}
