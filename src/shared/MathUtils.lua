@@ -16,4 +16,20 @@ function MathUtils.projectOntoPlane(vector, normal)
 	return vector - normal * vector:Dot(normal)
 end
 
+function MathUtils.hysteresis(value, state, lowThreshold, highThreshold)
+	if state then
+		if value < lowThreshold then
+			return false
+		end
+
+		return true
+	end
+
+	if value > highThreshold then
+		return true
+	end
+
+	return false
+end
+
 return MathUtils

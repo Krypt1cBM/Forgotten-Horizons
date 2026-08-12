@@ -1,4 +1,5 @@
 local Constants = require(script.Parent.Parent.Constants)
+local MathUtils = require(game.ReplicatedStorage.Scripts.MathUtils)
 
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
@@ -16,11 +17,83 @@ local pendingCenterLocation = nil
 local pendingDesiredLocations = nil
 local playerChunkX = nil
 local playerChunkY = nil
+local playerFace = nil
+
+local protectedBoundary = nil
 
 local planetContext
 
 local function locationsEqual(a, b)
 	return a and b and a.face == b.face and a.chunkX == b.chunkX and a.chunkY == b.chunkY
+end
+
+local function sameBoundary(fromA, toA, fromB, toB)
+	return (locationsEqual(fromA, fromB) and locationsEqual(toA, toB))
+		or (locationsEqual(fromA, toB) and locationsEqual(toA, fromB))
+end
+
+local function pastMid(position, location)
+	local direction = (position - planetContext.center).Unit
+	local cubePoint = CubeSphere.sphereToCube(location.face, direction)
+
+	local chunkSize = 2 / planetContext.faceChunkCount
+
+	local uMin = -1 + location.chunkX * chunkSize
+	local vMin = -1 + location.chunkY * chunkSize
+
+	local localU = (cubePoint.X - uMin) / chunkSize
+	local localV = (cubePoint.Y - vMin) / chunkSize
+
+	if protectedBoundary.from.chunkX ~= protectedBoundary.to.chunkX then
+		local positive = protectedBoundary.to.chunkX > protectedBoundary.from.chunkX
+
+		if locationsEqual(location, protectedBoundary.to) then
+			return positive and localU >= 0.5 or localU <= 0.5
+		else
+			return positive and localU <= 0.5 or localU >= 0.5
+		end
+	end
+
+	local positive = protectedBoundary.to.chunkY > protectedBoundary.from.chunkY
+
+	if locationsEqual(location, protectedBoundary.to) then
+		return positive and localV >= 0.5 or localV <= 0.5
+	end
+
+	return positive and localV <= 0.5 or localV >= 0.5
+end
+
+local function hasCrossedChunkHysteresis(position, face, newChunkX, newChunkY, currentChunkX, currentChunkY)
+	local direction = (position - planetContext.center).Unit
+	local cubePoint = CubeSphere.sphereToCube(face, direction)
+
+	local chunkSize = 2 / planetContext.faceChunkCount
+
+	local uMin = -1 + newChunkX * chunkSize
+	local vMin = -1 + newChunkY * chunkSize
+
+	local localU = (cubePoint.X - uMin) / chunkSize
+	local localV = (cubePoint.Y - vMin) / chunkSize
+
+	local threshold = Constants.Planet.CHUNK_HYSTERESIS
+
+	if newChunkX ~= currentChunkX then
+		if newChunkX > currentChunkX then
+			return localU > threshold
+		else
+			return localU < 1 - threshold
+		end
+	end
+
+	if newChunkY ~= currentChunkY then
+		if newChunkY > currentChunkY then
+			return localV > threshold
+		else
+			return localV < 1 - threshold
+		end
+	end
+
+	return true
 end
 
 local function reconcileChunks(centerLocation, desiredLocations)
@@ -125,26 +198,95 @@ function ChunkManager.update(playerTracker)
 	end
 
 	local newFace = CubeTopology.getFaceFromPosition(planetContext, position)
-
 	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, newFace, position)
-
 	local newHiddenCorner = StreamPlanner.getHiddenCorner(planetContext, newFace, chunkX, chunkY, position)
 
-	if
-		newFace ~= currentFace
-		or chunkX ~= playerChunkX
-		or chunkY ~= playerChunkY
-		or newHiddenCorner ~= currentHiddenCorner
-	then
+	local chunkChanged = newFace ~= playerFace or chunkX ~= playerChunkX or chunkY ~= playerChunkY
+	local hiddenCornerChanged = newHiddenCorner ~= currentHiddenCorner
+	local acceptChunkChange = true
+
+	local proposedLocation = {
+		face = newFace,
+		chunkX = chunkX,
+		chunkY = chunkY,
+	}
+
+	local currentLocation = nil
+
+	if playerFace and playerChunkX and playerChunkY then
+		currentLocation = {
+			face = playerFace,
+			chunkX = playerChunkX,
+			chunkY = playerChunkY,
+		}
+	end
+
+	if currentLocation and protectedBoundary and not chunkChanged then
+		if pastMid(position, currentLocation) then
+			protectedBoundary = nil
+		end
+	end
+
+	local isProtectedBoundary = false
+
+	if currentLocation and protectedBoundary then
+		isProtectedBoundary =
+			sameBoundary(currentLocation, proposedLocation, protectedBoundary.from, protectedBoundary.to)
+	end
+
+	print(
+		"BOUNDARY",
+		currentLocation and currentLocation.chunkX,
+		currentLocation and currentLocation.chunkY,
+		"->",
+		proposedLocation.chunkX,
+		proposedLocation.chunkY,
+		"protected:",
+		protectedBoundary and protectedBoundary.from.chunkX,
+		protectedBoundary and protectedBoundary.from.chunkY,
+		protectedBoundary and protectedBoundary.to.chunkX,
+		protectedBoundary and protectedBoundary.to.chunkY,
+		"isProtected:",
+		isProtectedBoundary
+	)
+	if chunkChanged and currentLocation and isProtectedBoundary then
+		acceptChunkChange = hasCrossedChunkHysteresis(position, newFace, chunkX, chunkY, playerChunkX, playerChunkY)
+	end
+
+	if chunkChanged and acceptChunkChange then
+		if playerFace ~= nil and not isProtectedBoundary then
+			protectedBoundary = {
+				from = {
+					face = playerFace,
+					chunkX = playerChunkX,
+					chunkY = playerChunkY,
+				},
+
+				to = {
+					face = newFace,
+					chunkX = chunkX,
+					chunkY = chunkY,
+				},
+			}
+		end
+
+		playerFace = newFace
 		playerChunkX = chunkX
 		playerChunkY = chunkY
 		currentHiddenCorner = newHiddenCorner
 
 		pendingCenterLocation = {
-			face = newFace,
-			chunkX = chunkX,
-			chunkY = chunkY,
+			face = playerFace,
+			chunkX = playerChunkX,
+			chunkY = playerChunkY,
 		}
+
+		pendingDesiredLocations =
+			StreamPlanner.getDesiredLocations(planetContext, pendingCenterLocation, currentHiddenCorner)
+	elseif not chunkChanged and hiddenCornerChanged and currentLocation then
+		currentHiddenCorner = newHiddenCorner
+
+		pendingCenterLocation = currentLocation
 
 		pendingDesiredLocations =
 			StreamPlanner.getDesiredLocations(planetContext, pendingCenterLocation, currentHiddenCorner)
