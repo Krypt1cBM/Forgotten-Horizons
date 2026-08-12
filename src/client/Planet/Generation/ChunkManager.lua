@@ -96,6 +96,16 @@ local function hasCrossedChunkHysteresis(position, face, newChunkX, newChunkY, c
 	return true
 end
 
+local function getLoadedCount()
+	local count = 0
+
+	for _ in pairs(loadedChunks) do
+		count += 1
+	end
+
+	return count
+end
+
 local function reconcileChunks(centerLocation, desiredLocations)
 	local commonChunks = {}
 	local freeChunks = {}
@@ -149,10 +159,10 @@ local function reconcileChunks(centerLocation, desiredLocations)
 	local oldKey = freeChunk.key
 	local newKey = StreamPlanner.getLocationKey(missingLocation)
 
-	freeChunk.chunk:recycle(planetContext, missingLocation)
-
 	loadedChunks[oldKey] = nil
 	loadedChunks[newKey] = freeChunk.chunk
+
+	freeChunk.chunk:recycle(planetContext, missingLocation)
 
 	return false
 end
@@ -234,21 +244,6 @@ function ChunkManager.update(playerTracker)
 			sameBoundary(currentLocation, proposedLocation, protectedBoundary.from, protectedBoundary.to)
 	end
 
-	print(
-		"BOUNDARY",
-		currentLocation and currentLocation.chunkX,
-		currentLocation and currentLocation.chunkY,
-		"->",
-		proposedLocation.chunkX,
-		proposedLocation.chunkY,
-		"protected:",
-		protectedBoundary and protectedBoundary.from.chunkX,
-		protectedBoundary and protectedBoundary.from.chunkY,
-		protectedBoundary and protectedBoundary.to.chunkX,
-		protectedBoundary and protectedBoundary.to.chunkY,
-		"isProtected:",
-		isProtectedBoundary
-	)
 	if chunkChanged and currentLocation and isProtectedBoundary then
 		acceptChunkChange = hasCrossedChunkHysteresis(position, newFace, chunkX, chunkY, playerChunkX, playerChunkY)
 	end
