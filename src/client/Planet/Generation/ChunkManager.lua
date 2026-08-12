@@ -1,5 +1,4 @@
 local Constants = require(script.Parent.Parent.Constants)
-local MathUtils = require(game.ReplicatedStorage.Scripts.MathUtils)
 
 local Chunk = require(script.Parent.Chunk)
 local StreamPlanner = require(script.Parent.StreamPlanner)
@@ -10,7 +9,6 @@ local ChunkManager = {}
 
 local loadedChunks = {}
 
-local currentFace = nil
 local currentHiddenCorner = StreamPlanner.HiddenCorner.SE
 
 local pendingCenterLocation = nil
@@ -96,16 +94,6 @@ local function hasCrossedChunkHysteresis(position, face, newChunkX, newChunkY, c
 	return true
 end
 
-local function getLoadedCount()
-	local count = 0
-
-	for _ in pairs(loadedChunks) do
-		count += 1
-	end
-
-	return count
-end
-
 local function reconcileChunks(centerLocation, desiredLocations)
 	local commonChunks = {}
 	local freeChunks = {}
@@ -167,10 +155,6 @@ local function reconcileChunks(centerLocation, desiredLocations)
 	return false
 end
 
-function ChunkManager.setCenterLocation(location)
-	currentFace = location.face
-end
-
 function ChunkManager.initialize()
 	local PlanetContext = require(script.Parent.PlanetContext)
 
@@ -186,8 +170,6 @@ function ChunkManager.initialize()
 		chunkX = math.floor(planetContext.faceChunkCount / 2),
 		chunkY = math.floor(planetContext.faceChunkCount / 2),
 	}
-
-	ChunkManager.setCenterLocation(currentLocation)
 
 	local desiredLocations = StreamPlanner.getDesiredLocations(planetContext, currentLocation, currentHiddenCorner)
 
@@ -209,9 +191,24 @@ function ChunkManager.update(playerTracker)
 
 	local newFace = CubeTopology.getFaceFromPosition(planetContext, position)
 	local chunkX, chunkY = CubeSphere.getChunkFromPosition(planetContext, newFace, position)
-	local newHiddenCorner = StreamPlanner.getHiddenCorner(planetContext, newFace, chunkX, chunkY, position)
+
+	local newHiddenCorner
 
 	local chunkChanged = newFace ~= playerFace or chunkX ~= playerChunkX or chunkY ~= playerChunkY
+
+	if chunkChanged then
+		newHiddenCorner = StreamPlanner.getHiddenCorner(planetContext, newFace, chunkX, chunkY, position)
+	else
+		newHiddenCorner = StreamPlanner.getHiddenCornerWithHysteresis(
+			planetContext,
+			newFace,
+			chunkX,
+			chunkY,
+			position,
+			currentHiddenCorner
+		)
+	end
+
 	local hiddenCornerChanged = newHiddenCorner ~= currentHiddenCorner
 	local acceptChunkChange = true
 
@@ -291,8 +288,6 @@ function ChunkManager.update(playerTracker)
 		local complete = reconcileChunks(pendingCenterLocation, pendingDesiredLocations)
 
 		if complete then
-			ChunkManager.setCenterLocation(pendingCenterLocation)
-
 			pendingCenterLocation = nil
 			pendingDesiredLocations = nil
 		end

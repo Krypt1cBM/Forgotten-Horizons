@@ -6,6 +6,7 @@ Constants.Planet = { --most of these will come from seed or another source
 	RESOLUTION = 32,
 	CENTER = Vector3.zero,
 	CHUNK_HYSTERESIS = 0.05,
+	CORNER_HYSTERESIS = 0.03,
 }
 
 Constants.GRAVITY_ACCELERATION = 500
