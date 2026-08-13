@@ -41,6 +41,8 @@ Constants.Camera = {
 	COLLISION_PADDING = 0.1,
 }
 
+Constants.Terrain = {}
+
 Constants.Settings = {
 	Keybinds = {},
 	Camera = {
