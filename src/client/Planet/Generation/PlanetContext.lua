@@ -7,6 +7,7 @@ PlanetContext.__index = PlanetContext
 function PlanetContext.new(settings)
 	local self = setmetatable({}, PlanetContext)
 
+	self.seed = settings.seed
 	self.baseRadius = settings.radius
 	self.center = settings.center
 	self.resolution = settings.resolution

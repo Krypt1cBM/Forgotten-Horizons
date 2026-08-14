@@ -17,6 +17,7 @@ function Chunk.new()
 	self.meshPart = nil
 	self.editableMesh = nil
 	self.vertices = nil
+	self.faces = nil
 
 	return self
 end
@@ -27,8 +28,11 @@ function Chunk:buildMesh(context)
 	end)
 	assert(success1 and editableMesh, "Failed to create EditableMesh during chunk recycle")
 
-	self.vertices = ChunkGenerator.createTopology(editableMesh, context)
-	ChunkGenerator.updatePositions(editableMesh, context, self.location, self.chunkFrame, self.vertices)
+	self.vertices, self.faces = ChunkGenerator.createTopology(editableMesh, context)
+
+	self.colorIds = {}
+
+	ChunkGenerator.updatePositions(editableMesh, context, self.location, self.chunkFrame, self.vertices, self.colorIds)
 
 	local success2, result = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
@@ -76,7 +80,14 @@ function Chunk:recycle(context, location)
 	self.location = location
 	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
 
-	ChunkGenerator.updatePositions(self.editableMesh, context, self.location, self.chunkFrame, self.vertices)
+	ChunkGenerator.updatePositions(
+		self.editableMesh,
+		context,
+		self.location,
+		self.chunkFrame,
+		self.vertices,
+		self.colorIds
+	)
 
 	local success, updatedMeshPart = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh))

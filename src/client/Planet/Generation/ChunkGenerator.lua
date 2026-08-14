@@ -1,9 +1,11 @@
 local CubeSphere = require(script.Parent.Parent.CubeSphere)
+local TerrainController = require(script.Parent.Parent.Terrain.TerrainController)
 
 local ChunkGenerator = {}
 
 function ChunkGenerator.createTopology(editableMesh, context)
 	local vertices = {}
+	local faces = {}
 
 	for y = 0, context.resolution do
 		vertices[y] = {}
@@ -13,21 +15,25 @@ function ChunkGenerator.createTopology(editableMesh, context)
 	end
 
 	for y = 0, context.resolution - 1 do
+		faces[y] = {}
+
 		for x = 0, context.resolution - 1 do
 			local a = vertices[y][x]
 			local b = vertices[y][x + 1]
 			local c = vertices[y + 1][x]
 			local d = vertices[y + 1][x + 1]
 
-			editableMesh:AddTriangle(a, b, c)
-			editableMesh:AddTriangle(b, d, c)
+			faces[y][x] = {
+				editableMesh:AddTriangle(a, b, c),
+				editableMesh:AddTriangle(b, d, c),
+			}
 		end
 	end
 
-	return vertices
+	return vertices, faces
 end
 
-function ChunkGenerator.updatePositions(editableMesh, context, location, chunkFrame, vertices)
+function ChunkGenerator.updatePositions(editableMesh, context, location, chunkFrame, vertices, colorIds)
 	local uMin, uMax, vMin, vMax = CubeSphere.getChunkBounds(context, location.chunkX, location.chunkY)
 
 	for y = 0, context.resolution do
@@ -41,14 +47,28 @@ function ChunkGenerator.updatePositions(editableMesh, context, location, chunkFr
 			local cubePoint = CubeSphere.getCubePoint(location.face, u, v)
 
 			local direction = CubeSphere.cubeToSphere(cubePoint).Unit
+			local terrain = TerrainController.getTerrain(context, direction)
 
-			local height = math.noise(direction.X * 3, direction.Y * 3, direction.Z * 3) * context.maxHeight
-			height = 0 --no terrain
+			local colorId = colorIds[terrain.color]
+
+			if not colorId then
+				colorId = editableMesh:AddColor(terrain.color, 1)
+				colorIds[terrain.color] = colorId
+			end
+
+			local height = 0
 
 			local spherePoint = direction * (context.baseRadius + height)
 			local localPoint = chunkFrame:PointToObjectSpace(spherePoint)
 
 			editableMesh:SetPosition(vertices[y][x], localPoint)
+
+			local vertexId = vertices[y][x]
+			local vertexFaces = editableMesh:GetVertexFaces(vertexId)
+
+			for _, faceId in vertexFaces do
+				editableMesh:SetVertexFaceColor(vertexId, faceId, colorId)
+			end
 		end
 	end
 end

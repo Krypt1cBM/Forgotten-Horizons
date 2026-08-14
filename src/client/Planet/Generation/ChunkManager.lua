@@ -159,6 +159,7 @@ function ChunkManager.initialize()
 	local PlanetContext = require(script.Parent.PlanetContext)
 
 	planetContext = PlanetContext.new({
+		seed = 12345,
 		radius = Constants.Planet.RADIUS,
 		resolution = Constants.Planet.RESOLUTION,
 		center = Constants.Planet.CENTER,
