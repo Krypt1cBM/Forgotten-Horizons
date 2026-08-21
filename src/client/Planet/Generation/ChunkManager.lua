@@ -127,10 +127,38 @@ local function reconcileChunks(centerLocation, desiredLocations)
 		return StreamPlanner.getLocationKey(a) < StreamPlanner.getLocationKey(b)
 	end)
 
-	if #freeChunks ~= #missingLocations then
-		warn("Streaming mismatch:", "Common:", #commonChunks, "Free:", #freeChunks, "Missing:", #missingLocations)
+	if #freeChunks > #missingLocations then
+		for i = #missingLocations + 1, #freeChunks do
+			local freeChunk = freeChunks[i]
 
-		return false
+			loadedChunks[freeChunk.key] = nil
+			freeChunk.chunk:clearMesh()
+		end
+
+		while #freeChunks > #missingLocations do
+			table.remove(freeChunks)
+		end
+	end
+
+	if #freeChunks < #missingLocations then
+		local chunksToCreate = #missingLocations - #freeChunks
+
+		if not locationsEqual(pendingCenterLocation, centerLocation) then
+			return false
+		end
+
+		for i = 1, chunksToCreate do
+			local location = missingLocations[i]
+
+			local chunk = Chunk.new()
+			chunk:generate(planetContext, location)
+
+			loadedChunks[StreamPlanner.getLocationKey(location)] = chunk
+		end
+
+		for i = 1, chunksToCreate do
+			table.remove(missingLocations, 1)
+		end
 	end
 
 	if #missingLocations == 0 then

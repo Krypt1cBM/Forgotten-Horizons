@@ -42,8 +42,8 @@ end
 function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner)
 	local desiredLocations = {}
 
-	for offsetY = -1, 1 do
-		for offsetX = -1, 1 do
+	for offsetY = -2, 2 do
+		for offsetX = -2, 2 do
 			addLocation(
 				desiredLocations,
 				context,
@@ -52,26 +52,6 @@ function StreamPlanner.getDesiredLocations(context, centerLocation, hiddenCorner
 				centerLocation.chunkY + offsetY
 			)
 		end
-	end
-
-	local count = 0
-
-	for _ in pairs(desiredLocations) do
-		count += 1
-	end
-
-	if count == 9 then
-		local hidden = cornerOffsets[hiddenCorner]
-
-		local hiddenLocation = {
-			face = centerLocation.face,
-			chunkX = centerLocation.chunkX + hidden.X,
-			chunkY = centerLocation.chunkY + hidden.Y,
-		}
-
-		local wrappedHidden = CubeTopology.wrapLocation(context, hiddenLocation)
-
-		desiredLocations[StreamPlanner.getLocationKey(wrappedHidden)] = nil
 	end
 
 	return desiredLocations

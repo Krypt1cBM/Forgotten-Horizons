@@ -26,31 +26,42 @@ function Chunk:buildMesh(context)
 	local success1, editableMesh = pcall(function()
 		return AssetService:CreateEditableMesh()
 	end)
-	assert(success1 and editableMesh, "Failed to create EditableMesh during chunk recycle")
+
+	if not success1 or not editableMesh then
+		error("Failed to create EditableMesh: " .. tostring(editableMesh))
+	end
 
 	self.vertices, self.faces = ChunkGenerator.createTopology(editableMesh, context)
 
-	self.colorIds = {}
+	ChunkGenerator.updatePositions(editableMesh, context, self.location, self.chunkFrame, self.vertices)
 
-	ChunkGenerator.updatePositions(editableMesh, context, self.location, self.chunkFrame, self.vertices, self.colorIds)
+	local success2, sealedMesh = pcall(function()
+		return AssetService:CreateEditableMeshAsync(Content.fromObject(editableMesh))
+	end)
 
-	local success2, result = pcall(function()
-		return AssetService:CreateMeshPartAsync(Content.fromObject(editableMesh), {
+	if not success2 or not sealedMesh then
+		editableMesh:Destroy()
+		error("Failed to seal EditableMesh: " .. tostring(sealedMesh))
+	end
+
+	editableMesh:Destroy()
+
+	local success3, meshPart = pcall(function()
+		return AssetService:CreateMeshPartAsync(Content.fromObject(sealedMesh), {
 			CollisionFidelity = Enum.CollisionFidelity.PreciseConvexDecomposition,
 		})
 	end)
 
-	if not success2 then
-		error(result)
+	if not success3 or not meshPart then
+		sealedMesh:Destroy()
+		error("Failed to create MeshPart from sealed EditableMesh: " .. tostring(meshPart))
 	end
-	local meshPart = result
 
 	meshPart.CFrame = self.chunkFrame
-
 	meshPart.Anchored = true
 	meshPart.Parent = workspace
 
-	return meshPart, editableMesh
+	return meshPart, sealedMesh
 end
 
 function Chunk:clearMesh()
@@ -80,14 +91,7 @@ function Chunk:recycle(context, location)
 	self.location = location
 	self.chunkFrame = CubeSphere.getChunkFrame(context, location.face, location.chunkX, location.chunkY)
 
-	ChunkGenerator.updatePositions(
-		self.editableMesh,
-		context,
-		self.location,
-		self.chunkFrame,
-		self.vertices,
-		self.colorIds
-	)
+	ChunkGenerator.updatePositions(self.editableMesh, context, self.location, self.chunkFrame, self.vertices)
 
 	local success, updatedMeshPart = pcall(function()
 		return AssetService:CreateMeshPartAsync(Content.fromObject(self.editableMesh))

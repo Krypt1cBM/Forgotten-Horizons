@@ -47,14 +47,6 @@ function ChunkGenerator.updatePositions(editableMesh, context, location, chunkFr
 			local cubePoint = CubeSphere.getCubePoint(location.face, u, v)
 
 			local direction = CubeSphere.cubeToSphere(cubePoint).Unit
-			local terrain = TerrainController.getTerrain(context, direction)
-
-			local colorId = colorIds[terrain.color]
-
-			if not colorId then
-				colorId = editableMesh:AddColor(terrain.color, 1)
-				colorIds[terrain.color] = colorId
-			end
 
 			local height = 0
 
@@ -62,13 +54,6 @@ function ChunkGenerator.updatePositions(editableMesh, context, location, chunkFr
 			local localPoint = chunkFrame:PointToObjectSpace(spherePoint)
 
 			editableMesh:SetPosition(vertices[y][x], localPoint)
-
-			local vertexId = vertices[y][x]
-			local vertexFaces = editableMesh:GetVertexFaces(vertexId)
-
-			for _, faceId in vertexFaces do
-				editableMesh:SetVertexFaceColor(vertexId, faceId, colorId)
-			end
 		end
 	end
 end
